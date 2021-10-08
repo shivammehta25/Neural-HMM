@@ -1,0 +1,5 @@
+title: Neural HMM TTS
+theme: jekyll-theme-dinky
+description: Neural HMMs are all you need (for high-quality attention-free TTS)
+show_downloads: False
+logo: /images/Neural_HMM.png
