@@ -5,11 +5,13 @@
 [demo_page]: https://shivammehta007.github.io/Neural-HMM/
 [ljspeech_link]: https://keithito.com/LJ-Speech-Dataset/
 [github_link]: https://github.com/shivammehta007/Neural-HMM.git
+[github_new_issue_link]: https://github.com/shivammehta007/Neural-HMM/issues/new
 [docker_install_link]: https://docs.docker.com/get-docker/
 [tacotron2_link]: https://github.com/NVIDIA/tacotron2
 [pretrained_model_link]: https://www.test.com
 [nvidia_waveglow_link]: https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
+[pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
 
 This is the official code repository for [Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link].
 
@@ -49,6 +51,12 @@ This is the official code repository for [Neural HMMs are all you need (for high
 - Since the code uses PyTorch Lightning, Setting gpus more than one element in the list will enable multi-gpu training. So change ```hparams.gpus``` to ```[0, 1, 2]``` for multi-gpu training and single element ```[0]``` for single GPU training.
 
 
+### Known Issues/Warnings
+
+#### PyTorch dataloader
+* If you encounter this error message ```[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)```. This is a known issue in [PyTorch Dataloader][pytorch_dataloader_issue_link]. 
+* It will be fixed when PyTorch will release new Docker container image with updated version of Torch. If you are not using docker this can be removed with ```torch > 1.9.1```
+
 ## Citation Information
 If you use Neural HMMs are all you need (for high-quality attention-free TTS) for your research, please cite our paper:
 ```
@@ -59,6 +67,9 @@ If you use Neural HMMs are all you need (for high-quality attention-free TTS) fo
   year={2021}
 }
 ```
+
+## Support
+If you have any questions or comments, please open an [issue][github_new_issue_link] on our GitHub repository.
 
 ## Acknowledgement
 The code implementation is inspired by NVIDIA team's implementation of [Tacotron 2][tacotron2_link] and uses [PyTorch Lightning][pytorch_lightning_link] for boilerplate-free code.
