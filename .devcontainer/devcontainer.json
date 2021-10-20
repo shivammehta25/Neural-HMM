@@ -1,0 +1,16 @@
+{
+	"name": "neural-hmm",
+	"build": {
+		"context": "..",
+		"dockerfile": "../Dockerfile",
+		"args": {
+			"DOCKER_WORKSPACE_PATH": "/workspace"
+		}
+	},
+	"extensions": [
+		"ms-python.python"
+	],
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+	"workspaceFolder": "/workspace",
+	"remoteUser": "docker-user"
+}
