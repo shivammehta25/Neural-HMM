@@ -42,7 +42,7 @@ This is the official code repository for [Neural HMMs are all you need (for high
 3. Run jupyter notebook and open ```synthesis.ipynb```.
 
 
-## Miscelaneous
+## Miscellaneous
 ### Mix Precision Training or Full Precision Training
 - In ```src.hparams.py``` change ```hparams.precision``` to ```16``` for mix precision and ```32``` for full precision.
 ### Multi-GPU Training or Single GPU Training
