@@ -1,5 +1,5 @@
 # Neural HMMs are all you need (for high-quality attention-free TTS)
-##### [Shivam Mehta](https://www.kth.se/profile/smehta) , [Éva Székely](https://www.kth.se/profile/szekely), [Jonas Beskow](https://www.kth.se/profile/beskow), and [Gustav Eje Henter](https://people.kth.se/~ghe/)
+##### [Shivam Mehta][shivam_profile] , [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
 
 
 <head> 
@@ -14,6 +14,11 @@
 <!-- This post presents Neural-HMMs an autoregressive attention-free deep generative model for synthesising high-quality Mel-Spectrogram representations. -->
 
 [arxiv_link]: https://arxiv.org/abs/2108.13320
+[github_link]: https://github.com/shivammehta007/Neural-HMM
+[shivam_profile]: https://www.kth.se/profile/smehta
+[eva_profile]: https://www.kth.se/profile/szekely
+[jonas_profile]: https://www.kth.se/profile/beskow
+[gustav_profile]: https://people.kth.se/~ghe/
 
 ## Summary
 
@@ -36,7 +41,7 @@ For more information, please [read our preprint here][arxiv_link].
 
 ## Code
 
-Code will be made available soon.
+Code is available on our [Github repository][github_link].
 
 ## Listening examples
 
