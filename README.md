@@ -1,7 +1,12 @@
 # Neural HMMs are all you need (for high-quality attention-free TTS)
+##### [Shivam Mehta][shivam_profile] , [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
 ---
 
 [paper_link]: https://arxiv.org/abs/2108.13320
+[shivam_profile]: https://www.kth.se/profile/smehta
+[eva_profile]: https://www.kth.se/profile/szekely
+[jonas_profile]: https://www.kth.se/profile/beskow
+[gustav_profile]: https://people.kth.se/~ghe/
 [demo_page]: https://shivammehta007.github.io/Neural-HMM/
 [ljspeech_link]: https://keithito.com/LJ-Speech-Dataset/
 [github_link]: https://github.com/shivammehta007/Neural-HMM.git
@@ -12,6 +17,7 @@
 [nvidia_waveglow_link]: https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
+
 
 This is the official code repository for [Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link].
 
