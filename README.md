@@ -13,7 +13,7 @@
 [github_new_issue_link]: https://github.com/shivammehta007/Neural-HMM/issues/new
 [docker_install_link]: https://docs.docker.com/get-docker/
 [tacotron2_link]: https://github.com/NVIDIA/tacotron2
-[pretrained_model_link]: https://www.test.com
+[pretrained_model_link]: https://kth.box.com/v/neural-hmm-pretrained
 [nvidia_waveglow_link]: https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
@@ -40,7 +40,7 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 8. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
 
 ## Synthesis
-1. Download our `[pre-trained model]` (available soon).
+1. Download our [pre-trained model][pretrained_model_link].
 2. Download Nvidia's [WaveGlow model][nvidia_waveglow_link].
 3. Run jupyter notebook and open ```synthesis.ipynb```.
 
