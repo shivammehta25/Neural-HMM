@@ -4,6 +4,7 @@ from src.model.Prenet import Prenet
 from src.utilities.functions import log_clamped
 from torch import nn
 from torch.nn import functional as F
+from torch.utils.checkpoint import checkpoint
 
 
 class HMM(nn.Module):
@@ -123,10 +124,12 @@ class HMM(nn.Module):
             h_post_prenet, c_post_prenet = self.post_prenet_rnn(
                 ar_inputs_prenet, (h_post_prenet, c_post_prenet))
 
-            mean, std, transition_vector = self.decoder(
-                h_post_prenet, text_embeddings)
-            log_alpha_temp = self.emission_model(mel_inputs[:, t], mean,
-                                                 std, text_lengths) + self.transition_model(
+            mean, std, transition_vector = torch.utils.checkpoint.checkpoint(
+                self.decoder, h_post_prenet, text_embeddings)
+
+            log_alpha_temp = self.emission_model(
+                mel_inputs[:, t], mean,
+                std, text_lengths) + self.transition_model(
                 self.log_alpha_scaled[:, t - 1, :], transition_vector, text_lengths)
             log_c[:, t] = torch.logsumexp(log_alpha_temp, dim=1)
             self.log_alpha_scaled[:, t,
