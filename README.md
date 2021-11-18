@@ -41,7 +41,8 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 8. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
 
 ## Synthesis
-1. Download our [pre-trained model][pretrained_model_link].
+1. Download our [pre-trained model][pretrained_model_link]. 
+(This is the exact same model as system NH2 in the paper, but with training continued until reaching 200k updates total.)
 2. Download Nvidia's [WaveGlow model][nvidia_waveglow_link].
 3. Run jupyter notebook and open ```synthesis.ipynb```.
 
