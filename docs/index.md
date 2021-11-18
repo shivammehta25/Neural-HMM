@@ -1,5 +1,5 @@
 # Neural HMMs are all you need (for high-quality attention-free TTS)
-##### [Shivam Mehta][shivam_profile] , [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
+##### [Shivam Mehta][shivam_profile], [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
 
 
 <head> 
