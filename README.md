@@ -19,7 +19,7 @@
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
 
 
-This is the official code repository for the paper "[Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link]". For audio examples, visit our [demo page][demo_page].
+This is the official code repository for the paper "[Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link]". For audio examples, visit our [demo page][demo_page]. A [pre-trained model](pretrained_model_link) is also available.
 
 
 ## Setup and training using LJ Speech
