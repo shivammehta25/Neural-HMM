@@ -41,7 +41,7 @@ For more information, please [read our preprint here][arxiv_link].
 
 ## Code
 
-Code is available on our [Github repository][github_link].
+Code is available on our [Github repository][github_link], along with a pre-trained model.
 
 ## Listening examples
 
