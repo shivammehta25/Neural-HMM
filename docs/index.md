@@ -1,5 +1,5 @@
 # Neural HMMs are all you need (for high-quality attention-free TTS)
-##### [Shivam Mehta][shivam_profile] , [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
+##### [Shivam Mehta][shivam_profile], [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
 
 
 <head> 
@@ -41,7 +41,7 @@ For more information, please [read our preprint here][arxiv_link].
 
 ## Code
 
-Code is available on our [Github repository][github_link].
+Code is available on our [Github repository][github_link], along with a pre-trained model.
 
 ## Listening examples
 

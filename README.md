@@ -19,12 +19,13 @@
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
 
 
-This is the official code repository for the paper "[Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link]". For audio examples, visit our [demo page][demo_page].
+This is the official code repository for the paper "[Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link]". For audio examples, visit our [demo page][demo_page]. A [pre-trained model](pretrained_model_link) is also available.
 
 
 ## Setup and training using LJ Speech
 1. Download and extract the [LJ Speech dataset][ljspeech_link]. Place it in the `data` folder such that the directory becomes `data/LJSpeech-1.1`. Otherwise update the filelists in `data/filelists` accordingly.
 2. Clone this repository ```git clone https://github.com/shivammehta007/Neural-HMM.git``` 
+   * If using single GPU checkout the branch ```gradient_checkpointing``` it will help to fit bigger batch size during training.
 3. Initalise the submodules ```git submodule init; git submodule update```
 4. Make sure you have [docker installed][docker_install_link] and running.
     * It is recommended to use Docker (it manages the CUDA runtime libraries and Python dependencies itself specified in Dockerfile)
@@ -40,7 +41,8 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 8. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
 
 ## Synthesis
-1. Download our [pre-trained model][pretrained_model_link].
+1. Download our [pre-trained LJ Speech model][pretrained_model_link]. 
+(This is the exact same model as system NH2 in the paper, but with training continued until reaching 200k updates total.)
 2. Download Nvidia's [WaveGlow model][nvidia_waveglow_link].
 3. Run jupyter notebook and open ```synthesis.ipynb```.
 
