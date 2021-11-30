@@ -91,10 +91,12 @@ st.title(title)
 st.write(desc)
 st.image(image, caption='Neural HMM Architecture')
 
+speaking_rate = st.slider('Speaker rate', min_value=0.1, max_value=0.9, value=0.4, step=0.1)
+
 user_input = st.text_input('Text to generate')
 if st.button('Generate Audio'):
     with torch.no_grad():
-        # model.model.hmm.hparams.duration_quantile_threshold= 1 - speaking_rate
+        model.model.hmm.hparams.duration_quantile_threshold = speaking_rate
         text = prepare_text(user_input)
         mel_output, _ = model.inference(text)
         mel_output = torch.tensor(mel_output).T.unsqueeze(0).cuda()
@@ -104,15 +106,6 @@ if st.button('Generate Audio'):
     # import pdb; pdb.set_trace()
 
     sample_rate = 22050
-    print(audio_denoised.shape)
-    print(mel_output.shape)
-    # audio_segment = pydub.AudioSegment(
-    #     audio_denoised.tobytes(), 
-    #     sample_width=audio_denoised.dtype.itemsize, 
-    #     frame_ratsample_e=rate,
-    #     channels=1
-    # )_
-
 
     spectrogram = mel_output.cpu().numpy()[0]
     fig, ax = plt.subplots(figsize=(12, 3))
@@ -126,9 +119,4 @@ if st.button('Generate Audio'):
 
     soundfile.write('temp.wav', audio_denoised.T, sample_rate)
     st.audio('temp.wav', format='audio/wav')
-
-    # write('temp.wav', sample_rate, audio_denoised)
-    # with open('temp.wav', 'rb') as f:
-    #     st.aud:_io(f.read(), format='audio/wav')
-
-    # st.audio('temp.wav', format='audio/wav')
+    os.remove('temp.wav')
