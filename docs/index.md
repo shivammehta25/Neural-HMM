@@ -38,8 +38,8 @@ For more information, please [read our preprint here][arxiv_link].
 
 ![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of Neural HMM TTS")
 
-## Web Example
-<iframe url="http://130.237.67.68:8501/" height="400" width="100%" title="Web Example"> </iframe>
+<!-- ## Web Example
+<iframe url="http://130.237.67.68:8501/" height="400" width="100%" title="Web Example"> </iframe> -->
 
 ## Code
 
