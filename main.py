@@ -9,8 +9,12 @@ from nltk import word_tokenize
 import warnings
 
 import os
-if os.getcwd().split('/')[-1] == 'deployment':
-    os.chdir('../')
+
+# print(os.getcwd())
+
+
+# if os.getcwd().split('/')[-1] == 'deployment':
+#     os.chdir('../')
 
 import nltk
 nltk.download('punkt')
@@ -32,7 +36,7 @@ from PIL import Image
 #===========================================#
 
 title = 'Neural HMM'
-image = Image.open('deployment/NeuralHMMTTS.png')
+image = Image.open('NeuralHMMTTS.png')
 desc = "Generate audio with the Neural HMM, more information available at https://shivammehta007.github.io/Neural-HMM/"
 
 
