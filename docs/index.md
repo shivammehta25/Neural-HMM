@@ -19,6 +19,7 @@
 [eva_profile]: https://www.kth.se/profile/szekely
 [jonas_profile]: https://www.kth.se/profile/beskow
 [gustav_profile]: https://people.kth.se/~ghe/
+[HiFi_GAN_LJ_FT_V1_link]: https://github.com/jik876/hifi-gan#pretrained-model
 
 ## Summary
 
@@ -954,7 +955,9 @@ Drag the slider to change the speaking rate.
 </script>
 
 
-### Synthesis with pretrained HiFi GAN on LJ Speech as a vocoder
+### Effect of using HiFi-GAN and a post-net
+
+These audio samples use a stronger vocoder ([HiFi-GAN version LJ_FT_T2_V1][HiFi_GAN_LJ_FT_V1_link]) and also include a hybrid condition NH2+P that demonstrates the effect of applying the post-net from model T2 to the output of model NH2.
 
 <table class="tg">
   <thead>
@@ -968,7 +971,7 @@ Drag the slider to change the speaking rate.
     <tr>
       <th class="tg-fymr">Condition</th>
       <th class="tg-fymr">2 states per phone (NH2)</th>
-      <th class="tg-fymr">NH2 with Tacotron 2's postnet (NH2+P)</th>
+      <th class="tg-fymr">NH2 with Tacotron 2's post-net (NH2+P)</th>
       <th class="tg-fymr">w/o post-net (T2-P)</th>
       <th class="tg-fymr">w/ post-net (T2+P)</th>
     </tr>
