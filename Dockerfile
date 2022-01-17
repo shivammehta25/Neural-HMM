@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.9.0-cuda11.1-cudnn8-devel
+FROM nvcr.io/nvidia/pytorch:21.11-py3
 
 # We need a named user for ids to map correctly in VS Code
 RUN groupadd -r docker-user && useradd -r -m -s /bin/false -g docker-user docker-user
