@@ -13,7 +13,7 @@
 [github_new_issue_link]: https://github.com/shivammehta007/Neural-HMM/issues/new
 [docker_install_link]: https://docs.docker.com/get-docker/
 [tacotron2_link]: https://github.com/NVIDIA/tacotron2
-[pretrained_model_link]: https://kth.box.com/v/neural-hmm-pretrained
+[pretrained_model_link]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM.ckpt
 [nvidia_waveglow_link]: https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
