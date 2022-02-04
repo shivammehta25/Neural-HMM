@@ -35,10 +35,11 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
     1. For multi-GPU training, set GPUs to ```[0, 1 ..]```
     2. For CPU training (not recommended), set GPUs to an empty list ```[]```
     3. Check the location of transcriptions
-7. Run ```python train.py``` to train the model.
+7. Once your filelists and hparams are updated run `python generate_data_properties.py` to generate `data_parameters.pt` for your dataset. For LJSpeech it is already precomputed and is available in the repository.
+8. Run ```python train.py``` to train the model.
     1. Checkpoints will be saved in the `hparams.checkpoint_dir`.
     2. Tensorboard logs will be saved in the `hparams.tensorboard_log_dir`.
-8. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
+9. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
 
 ## Synthesis
 1. Download our [pre-trained LJ Speech model][pretrained_model_link]. 
