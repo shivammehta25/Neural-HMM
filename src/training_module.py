@@ -14,6 +14,7 @@ import torch.nn.functional as F
 
 from src.model.NeuralHMM import NeuralHMM
 from src.validation_plotting import log_validation
+from src.hparams import create_hparams
 
 
 class TrainingModule(pl.LightningModule):
@@ -27,6 +28,16 @@ class TrainingModule(pl.LightningModule):
         hparams.logger = self.logger
 
         self.model = NeuralHMM(hparams)
+
+    def on_load_checkpoint(self, checkpoint):
+        if self.hparams.warm_start:
+            print("Warm starting from checkpoint..")
+            print(f"Removing these layers: {self.hparams['ignore_layers']}")
+            for layer in self.hparams['ignore_layers']:
+                checkpoint['state_dict'].pop(layer)
+
+            print("Removing optimizer states..")
+            checkpoint.pop('optimizer_state')
 
     def forward(self, x):
         r"""
