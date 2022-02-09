@@ -20,10 +20,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--checkpoint_path', type=str, default=None,
                         required=False, help='checkpoint path')
-    parser.add_argument('-r', '--run-name', type=str, default=None,
+    parser.add_argument('-r', '--run_name', type=str, default=None,
                         required=False, help='run name')
     parser.add_argument('-g', '--gpus', nargs='*', default=None,
                         required=False, help='gpu')
+    parser.add_argument('-w', '--warm_start',
+                        action='store_true', default=False, help='warm start')
+
     args = parser.parse_args()
 
     if args.checkpoint_path and not os.path.exists(args.checkpoint_path):
@@ -35,6 +38,9 @@ if __name__ == '__main__':
 
     if args.gpus:
         hparams.gpus = args.gpus
+
+    if args.warm_start:
+        hparams.warm_start = args.warm_start
 
     if hparams.run_tests:
         run_tests()

@@ -59,6 +59,8 @@ def create_hparams(generate_parameters=False):
         # Placeholder to use it later while loading model
         logger=None,
         run_tests=False,
+        warm_start=False,
+        ignore_layers=['model.embedding.weight'],
 
 
         ################################
@@ -71,7 +73,7 @@ def create_hparams(generate_parameters=False):
         text_cleaners=['english_cleaners'],
         phonetise=True,
         cmu_phonetiser=CMUDict('src/phonetised_files/cmudict-0.7b.txt'),
-        num_workers=20,
+        num_workers=0,
 
         ################################
         # Audio Parameters             #
