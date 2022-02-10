@@ -35,6 +35,9 @@ class TrainingModule(pl.LightningModule):
             print(f"Removing these layers: {self.hparams['ignore_layers']}")
             for layer in self.hparams['ignore_layers']:
                 checkpoint['state_dict'].pop(layer)
+                if 'embedding' in layer:
+                    checkpoint['state_dict']['model.embedding.weight'] = self.model.embedding.weight.data.clone(
+                    )
 
             print("Removing optimizer states..")
             checkpoint.pop('optimizer_states')
