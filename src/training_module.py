@@ -37,7 +37,7 @@ class TrainingModule(pl.LightningModule):
                 checkpoint['state_dict'].pop(layer)
 
             print("Removing optimizer states..")
-            checkpoint.pop('optimizer_state')
+            checkpoint.pop('optimizer_states')
 
     def forward(self, x):
         r"""
