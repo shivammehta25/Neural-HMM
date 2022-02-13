@@ -11,7 +11,7 @@
 <meta name="msapplication-TileColor" content="#da532c">
 <meta name="theme-color" content="#ffffff">
 </head>
-<!-- This post presents Neural-HMMs an autoregressive attention-free deep generative model for synthesising high-quality Mel-Spectrogram representations. -->
+<!-- This page presents audio examples of neural TTS using neural hidden Markov models instead of attention, as published at ICASSP 2022. -->
 
 [arxiv_link]: https://arxiv.org/abs/2108.13320
 [github_link]: https://github.com/shivammehta007/Neural-HMM
@@ -23,9 +23,11 @@
 
 ## Summary
 
-In this paper we show that classic, HMM-based speech synthesis and modern, neural text-to-speech (TTS) can be combined to obtain the best of both worlds. We call this new approach “neural HMM TTS”. The new system we describe:
+We show that classic, HMM-based speech synthesis and modern, neural text-to-speech (TTS) can be combined to obtain the best of both worlds. Concretely, our proposal amounts to replacing conventional attention in neural TTS by so-called neural HMMs. We call this new approach “neural HMM TTS”.
+
+To validate our proposal, we describe a modified version of Tacotron 2 that uses neural HMMs instead of attention. The resulting system:
 * Is smaller and simpler than Tacotron 2
-* Learns to speak and align faster
+* Learns to speak and align much quicker
 * Does not risk breaking down into gibberish
 * Is fully probabilistic
 * Allows easy control over speaking rate
@@ -33,18 +35,18 @@ In this paper we show that classic, HMM-based speech synthesis and modern, neura
 
 To our knowledge, this is the first time HMM-based speech synthesis has achieved a speech quality on par with neural TTS.
 
-For more information, please [read our preprint here][arxiv_link].
+For more information, please [read our ICASSP 2022 paper here][arxiv_link].
 
 ## Architecture
 
-![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of Neural HMM TTS")
+![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of neural HMM TTS")
 
 <!-- ## Web Example
 <iframe url="http://130.237.67.68:8501/" height="400" width="100%" title="Web Example"> </iframe> -->
 
 ## Code
 
-Code is available on our [Github repository][github_link], along with a pre-trained model.
+Code is available in our [Github repository][github_link], along with a pre-trained model.
 
 ## Listening examples
 
@@ -407,7 +409,7 @@ Code is available on our [Github repository][github_link], along with a pre-trai
 </script>
 
 
-### Speaking sentences Tacotron 2 cannot
+### Speaking sentences Tacotron 2 cannot speak
 
 <table class="tg">
 <thead>
@@ -1215,11 +1217,11 @@ These audio samples use a stronger vocoder ([HiFi-GAN version LJ_FT_T2_V1][HiFi_
 ## Citation information
 
 ```
-@article{mehta2021neural,
+@inproceedings{mehta2022neural,
   title={Neural {HMM}s are all you need (for high-quality attention-free {TTS})},
   author={Mehta, Shivam and Sz{\'e}kely, {\'E}va and Beskow, Jonas and Henter, Gustav Eje},
-  journal={arXiv preprint arXiv:2108.13320},
-  year={2021}
+  booktitle={Proc. ICASSP},
+  year={2022}
 }
 ```
 
