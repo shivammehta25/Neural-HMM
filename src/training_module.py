@@ -29,20 +29,6 @@ class TrainingModule(pl.LightningModule):
 
         self.model = NeuralHMM(hparams)
 
-    # Not the right way to warm start in lightning
-    # def on_load_checkpoint(self, checkpoint):
-    #     if self.hparams.warm_start:
-    #         print("Warm starting from checkpoint..")
-    #         print(f"Removing these layers: {self.hparams['ignore_layers']}")
-    #         for layer in self.hparams['ignore_layers']:
-    #             checkpoint['state_dict'].pop(layer)
-    #             if 'embedding' in layer:
-    #                 checkpoint['state_dict']['model.embedding.weight'] = self.model.embedding.weight.data.clone(
-    #                 )
-
-    #         print("Removing optimizer states..")
-    #         checkpoint.pop('optimizer_states')
-
     def forward(self, x):
         r"""
         Forward pass of the model
