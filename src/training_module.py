@@ -29,16 +29,6 @@ class TrainingModule(pl.LightningModule):
 
         self.model = NeuralHMM(hparams)
 
-    def on_load_checkpoint(self, checkpoint):
-        if self.hparams.warm_start:
-            print("Warm starting from checkpoint..")
-            print(f"Removing these layers: {self.hparams['ignore_layers']}")
-            for layer in self.hparams['ignore_layers']:
-                checkpoint['state_dict'].pop(layer)
-
-            print("Removing optimizer states..")
-            checkpoint.pop('optimizer_state')
-
     def forward(self, x):
         r"""
         Forward pass of the model
