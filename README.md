@@ -67,11 +67,11 @@ If you have any questions or comments, please open an [issue][github_new_issue_l
 ## Citation information
 If you use or build on our method or code for your research, please cite our paper:
 ```
-@article{mehta2021neural,
+@inproceedings{mehta2022neural,
   title={Neural {HMM}s are all you need (for high-quality attention-free {TTS})},
   author={Mehta, Shivam and Sz{\'e}kely, {\'E}va and Beskow, Jonas and Henter, Gustav Eje},
-  journal={arXiv preprint arXiv:2108.13320},
-  year={2021}
+  booktitle={Proc. ICASSP},
+  year={2022}
 }
 ```
 ## Acknowledgements
