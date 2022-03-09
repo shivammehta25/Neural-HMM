@@ -56,11 +56,8 @@ if __name__ == '__main__':
     if args.gpus:
         hparams.gpus = args.gpus
 
-    if args.warm_start:
-        hparams.warm_start = args.warm_start
-
-    if args.checkpoint_path:
-        hparams.checkpoint_path = args.checkpoint_path
+    hparams.warm_start = args.warm_start
+    hparams.checkpoint_path = args.checkpoint_path
 
     if hparams.run_tests:
         run_tests()

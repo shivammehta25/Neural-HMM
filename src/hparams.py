@@ -73,7 +73,7 @@ def create_hparams(generate_parameters=False):
         text_cleaners=['english_cleaners'],
         phonetise=True,
         cmu_phonetiser=CMUDict('src/phonetised_files/cmudict-0.7b.txt'),
-        num_workers=0,
+        num_workers=20,
 
         ################################
         # Audio Parameters             #
