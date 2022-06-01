@@ -20,8 +20,9 @@ class HMM(nn.Module):
         self.prenet = Prenet(hparams.n_mel_channels * hparams.n_frames_per_step,
                              hparams.prenet_n_layers, hparams.prenet_dim, hparams.prenet_dropout)
 
-        self.post_prenet_rnn = nn.LSTMCell(
-            input_size=hparams.prenet_dim, hidden_size=hparams.post_prenet_rnn_dim)
+        self.post_prenet_rnn = nn.LSTM(hparams.prenet_dim, hparams.post_prenet_rnn_dim, batch_first=True)
+        # self.post_prenet_rnn = nn.LSTMCell(
+        #     input_size=hparams.prenet_dim, hidden_size=hparams.post_prenet_rnn_dim)
 
         self.decoder = Decoder(hparams)
 
@@ -65,10 +66,8 @@ class HMM(nn.Module):
 
         go_tokens = self.go_tokens.unsqueeze(0).expand(
             batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
-        # go_tokens.shape (4, 2, 80), mel_inputs.shape (4, 749, 80)
         ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)
-        # ar_inputs.shape (4, 751, 80)
-
+        
         state_priors = text_embeddings.new_zeros([self.N])
         state_priors[0] = 1
         state_priors[1:] = -float("Inf")
