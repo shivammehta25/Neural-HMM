@@ -27,7 +27,7 @@ class EmissionModel(nn.Module):
              means (float tensor): means of the distributions of hidden states
                 shape: (batch, hidden_state, feature_dim)
              stds (float tensor): standard deviations of the distributions of the hidden states
-                shape: (feature_dim)     tdist.normal.Normal will broadcast to the shape needed
+                shape: (batch, hidden_state, feature_dim) or (feature_dim)  tdist.normal.Normal will broadcast to the shape needed
             state_lengths (int tensor): Lengths of states in a batch
                 shape: (batch)
 

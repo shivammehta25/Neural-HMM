@@ -47,7 +47,7 @@ def create_hparams(generate_parameters=False):
         # Experiment Parameters        #
         ################################
         run_name="TestRun",
-        gpus=[0],
+        gpus=[4],
         max_epochs=50000,
         val_check_interval=100,
         save_model_checkpoint=500,
@@ -66,14 +66,14 @@ def create_hparams(generate_parameters=False):
         ################################
         # Data Parameters             #
         ################################
-        batch_size=6,
+        batch_size=2,
         load_mel_from_disk=False,
         training_files='data/filelists/ljs_audio_text_train_filelist.txt',
         validation_files='data/filelists/ljs_audio_text_val_filelist.txt',
         text_cleaners=['english_cleaners'],
         phonetise=True,
         cmu_phonetiser=CMUDict('src/phonetised_files/cmudict-0.7b.txt'),
-        num_workers=20,
+        num_workers=0,
 
         ################################
         # Audio Parameters             #
@@ -118,10 +118,6 @@ def create_hparams(generate_parameters=False):
         n_frames_per_step=1,  # AR Order
         train_go=True,
         variance_floor=0.001,
-        data_dropout=0,
-        data_dropout_while_eval=True,
-        data_dropout_while_sampling=False,
-
         predict_means=True,
         max_sampling_time=1000,
         deterministic_transition=True,
@@ -139,6 +135,7 @@ def create_hparams(generate_parameters=False):
         # Decoder RNN parameters       #
         ################################
         post_prenet_rnn_dim=1024,
+        post_prenet_rnn_layers=1,
 
         ################################
         # Decoder Parameters           #

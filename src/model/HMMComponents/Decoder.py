@@ -109,43 +109,46 @@ class Decoder(nn.Module):
         Inputs observation and returns the means, stds and transition probability for the current state
 
         Args:
-            ar_mel_inputs (torch.FloatTensor): shape (batch, prenet_dim)
-            states (torch.FloatTensor):  (hidden_states, hidden_state_dim)
+            ar_mel_inputs (torch.FloatTensor): shape (batch, T, prenet_dim)
+            states (torch.FloatTensor):  (batch, hidden_states, hidden_state_dim)
 
         Returns:
             means: means for the emission observation for each feature
-                shape: (batch, hidden_states, feature_size)
+                shape: (batch, T, hidden_states, n_mel_channels)
             stds: standard deviations for the emission observation for each feature
-                shape: (batch, hidden_states, feature_size)
+                shape: (batch, T, hidden_states, n_mel_channels)
             transition_vectors: transition vector for the current hidden state
-                shape: (batch, hidden_states)
+                shape: (batch, T, hidden_states)
         """
-        batch_size, prenet_dim = ar_mel_inputs.shape[0], ar_mel_inputs.shape[1]
-        N, N_dim = states.shape[1], states.shape[2]
+        batch_size, T, prenet_dim = ar_mel_inputs.shape
+        _, N, N_dim = states.shape
 
-        ar_mel_inputs = ar_mel_inputs.unsqueeze(
-            1).expand(batch_size, N, prenet_dim)
-        ar_mel_inputs = torch.cat((ar_mel_inputs, states), dim=2)
-        ar_mel_inputs = self.decoder_network(ar_mel_inputs)
+        # Add all states per mel timestep
+        expanded_states = states.unsqueeze(1).expand(batch_size, T, N, N_dim)
+        expanded_mel_inputs = ar_mel_inputs.unsqueeze(
+            2).expand(batch_size, T, N, prenet_dim)
 
-        mean, std, transition_vector = ar_mel_inputs[:, :, 0: self.hparams.n_mel_channels], ar_mel_inputs[:, :,
-                                                                                                          self.hparams.n_mel_channels: 2*self.hparams.n_mel_channels], ar_mel_inputs[:, :, 2*self.hparams.n_mel_channels:].squeeze(2)
-        std = F.softplus(std)
-        self.floor_variance(std)
+        merged_decoder_input = torch.cat(
+            (expanded_mel_inputs, expanded_states), dim=-1)
+        decoder_output = self.decoder_network(merged_decoder_input)
 
-        return mean, std, transition_vector
+        means, stds, transition_vectors = decoder_output[:, :, :, 0: self.hparams.n_mel_channels], decoder_output[:, :, :,
+                                                                                                                  self.hparams.n_mel_channels: 2*self.hparams.n_mel_channels], decoder_output[:, :, :, 2*self.hparams.n_mel_channels:].squeeze(3)
+        stds = self.floor_variance(F.softplus(stds))
 
-    @torch.no_grad()
+        return means, stds, transition_vectors
+
     def floor_variance(self, std):
         r"""
         It clamps the standard deviation to not to go below some level
         This removes the problem the model over learns for a state and the gaussian is converted to point mass
-        resulting in improper probability for data points
+        resulting in infinite likelihood for the data point, and prevents the degeneracy in the model
 
         Args:
             std (float Tensor): tensor containing the standard deviation to be
         """
         original_tensor = std.clone().detach()
-        torch.clamp_(std.data, min=self.hparams.variance_floor)
+        std = torch.clamp(std, min=self.hparams.variance_floor)
         if torch.any(original_tensor != std):
             print("Variance Floored")
+        return std

@@ -20,8 +20,10 @@ class HMM(nn.Module):
         self.prenet = Prenet(hparams.n_mel_channels * hparams.n_frames_per_step,
                              hparams.prenet_n_layers, hparams.prenet_dim, hparams.prenet_dropout)
 
-        self.post_prenet_rnn = nn.LSTMCell(
-            input_size=hparams.prenet_dim, hidden_size=hparams.post_prenet_rnn_dim)
+        self.post_prenet_rnn = nn.LSTM(
+            hparams.prenet_dim, hparams.post_prenet_rnn_dim, batch_first=True)
+        # self.post_prenet_rnn = nn.LSTMCell(
+        #     input_size=hparams.prenet_dim, hidden_size=hparams.post_prenet_rnn_dim)
 
         self.decoder = Decoder(hparams)
 
@@ -50,99 +52,46 @@ class HMM(nn.Module):
             log_prob (torch.FloatTensor): log probability of the sequence
         """
 
+        # Get dimensions of inputs
         batch_size = mel_inputs.shape[0]
         n_mel_channels = mel_inputs.shape[1]
         T_max = torch.max(mel_inputs_lengths)
-
         N = text_embeddings.shape[1]
         self.N = N
-
         mel_inputs = mel_inputs.permute(0, 2, 1)
 
-        assert n_mel_channels == self.hparams.n_mel_channels, "Mel channels not configured properly the input: {} and " \
-            "configuration: {} are different".format(n_mel_channels,
-                                                     self.hparams.n_mel_channels)
+        # Intialize forward algorithm
+        log_state_priors = self.initialize_log_state_priors(text_embeddings)
+        log_c = self.initialize_forward_algorithm_variables(
+            mel_inputs)
 
-        go_tokens = self.go_tokens.unsqueeze(0).expand(
-            batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
-        # go_tokens.shape (4, 2, 80), mel_inputs.shape (4, 749, 80)
-        ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)
-        # ar_inputs.shape (4, 751, 80)
-
-        state_priors = text_embeddings.new_zeros([self.N])
-        state_priors[0] = 1
-        state_priors[1:] = -float("Inf")
-
-        log_state_priors = F.log_softmax(state_priors, dim=0)
-
-        self.log_alpha_scaled = mel_inputs.new_zeros(
-            (batch_size, T_max, self.N))
-        log_c = mel_inputs.new_zeros(batch_size, T_max)
-
-        self.means = []
-
-        self.transition_vector = mel_inputs.new_zeros(
-            (batch_size, T_max, self.N))
-
-        h_post_prenet, c_post_prenet = self.init_lstm_states(
-            batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
-        data_dropout_flag = self.get_dropout_while_eval(
-            self.hparams.data_dropout_while_eval)
+        # Get dropout flag
         prenet_dropout_flag = self.get_dropout_while_eval(
             self.hparams.prenet_dropout_while_eval)
 
-        prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
-            ar_inputs[:, 0: self.hparams.n_frames_per_step], data_dropout_flag)
+        # Process Autoregression
+        ar_inputs = self.add_go_token(mel_inputs, batch_size, n_mel_channels)
+        ar_inputs_prenet = self.prenet(ar_inputs, prenet_dropout_flag)
+        ar_rnn_output, (_, _) = self.post_prenet_rnn(ar_inputs_prenet)
+        self.means, stds, self.transition_vectors = self.decoder(
+            ar_rnn_output, text_embeddings)
 
-        ar_inputs_prenet = self.prenet(
-            prenet_input.flatten(1), prenet_dropout_flag)
-        h_post_prenet, c_post_prenet = self.post_prenet_rnn(
-            ar_inputs_prenet, (h_post_prenet, c_post_prenet))
+        # Forward algorithm
+        for t in range(T_max):
+            if t == 0:
+                log_alpha_temp = log_state_priors + self.emission_model(mel_inputs[:, t], self.means[:, t],
+                                                                        stds[:, t], text_lengths)
+            else:
+                log_alpha_temp = self.emission_model(mel_inputs[:, t], self.means[:, t],
+                                                     stds[:, t], text_lengths) + self.transition_model(
+                    self.log_alpha_scaled[:, t - 1, :], self.transition_vectors[:, t], text_lengths)
 
-        mean, std, transition_vector = self.decoder(
-            h_post_prenet, text_embeddings)
-        self.transition_vector[:, 0] = transition_vector
-        self.means.append(mean.detach())
-
-        log_alpha_temp = log_state_priors + self.emission_model(mel_inputs[:, 0], mean,
-                                                                std, text_lengths)
-
-        log_c[:, 0] = torch.logsumexp(log_alpha_temp, dim=1)
-        self.log_alpha_scaled[:, 0, :] = log_alpha_temp - \
-            log_c[:, 0].unsqueeze(1)
-
-        self.transition_vector = mel_inputs.new_zeros(
-            (batch_size, T_max, self.N))
-
-        for t in range(1, T_max):
-            prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
-                ar_inputs[:, t: t + self.hparams.n_frames_per_step], data_dropout_flag)
-            ar_inputs_prenet = self.prenet(
-                prenet_input.flatten(1), prenet_dropout_flag)
-
-            h_post_prenet, c_post_prenet = self.post_prenet_rnn(
-                ar_inputs_prenet, (h_post_prenet, c_post_prenet))
-
-            mean, std, transition_vector = self.decoder(
-                h_post_prenet, text_embeddings)
-            log_alpha_temp = self.emission_model(mel_inputs[:, t], mean,
-                                                 std, text_lengths) + self.transition_model(
-                self.log_alpha_scaled[:, t - 1, :], transition_vector, text_lengths)
             log_c[:, t] = torch.logsumexp(log_alpha_temp, dim=1)
             self.log_alpha_scaled[:, t,
                                   :] = log_alpha_temp - log_c[:, t].unsqueeze(1)
-            self.transition_vector[:, t] = transition_vector
-            self.means.append(mean.detach())
 
-        mask_tensor = mel_inputs.new_zeros(T_max)
-        mask_log_c = (torch.arange(T_max, out=mask_tensor).expand(
-            len(mel_inputs_lengths), T_max) < (mel_inputs_lengths).unsqueeze(1))
-
-        log_c = log_c * mask_log_c
-
-        mask_log_alpha_scaled = mask_log_c.unsqueeze(2)
-
-        self.log_alpha_scaled = self.log_alpha_scaled * mask_log_alpha_scaled
+        # Masking input lengths
+        log_c = self.mask_lengths(mel_inputs, mel_inputs_lengths, log_c)
 
         sum_final_log_c = self.get_absorption_state_scaling_factor(
             mel_inputs_lengths, self.log_alpha_scaled, text_lengths)
@@ -150,6 +99,66 @@ class HMM(nn.Module):
         log_probs = torch.sum(log_c, dim=1) + sum_final_log_c
 
         return log_probs
+
+    def mask_lengths(self, mel_inputs, mel_inputs_lengths, log_c):
+        """
+        Mask the lengths of the forward variables so that the variable lenghts 
+        do not contribute in the loss calculation
+
+        Args:
+            mel_inputs (torch.FloatTensor): (batch, T, n_mel_channels)
+            mel_inputs_lengths (_type_): _description_
+            log_c (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        batch_size, T, n_mel_channel = mel_inputs.shape
+        mask_tensor = mel_inputs.new_zeros(T)
+        mask_log_c = (torch.arange(T, out=mask_tensor).expand(
+            len(mel_inputs_lengths), T) < (mel_inputs_lengths).unsqueeze(1))
+        log_c = log_c * mask_log_c
+
+        mask_log_alpha_scaled = mask_log_c.unsqueeze(2)
+
+        self.log_alpha_scaled = self.log_alpha_scaled * mask_log_alpha_scaled
+        return log_c
+
+    def initialize_forward_algorithm_variables(self, mel_inputs):
+        """
+        Initialize placeholders for forward algorithm variables, to use a stable version we will use
+        log_alpha_scaled and the scaling constant
+
+        Args:
+            mel_inputs (torch.FloatTensor): (batch_size, T, n_mel_channels)
+
+        Returns:
+            log_c (torch.FloatTensor): Scaling constant (batch_size, T)
+        """
+        batch_size, T, _ = mel_inputs.shape
+        self.log_alpha_scaled = mel_inputs.new_zeros(
+            (batch_size, T, self.N))
+        log_c = mel_inputs.new_zeros(batch_size, T)
+
+        return log_c
+
+    def initialize_log_state_priors(self, text_embeddings):
+        state_priors = text_embeddings.new_zeros([self.N])
+        state_priors[0] = 1
+        state_priors[1:] = -float("Inf")
+
+        log_state_priors = F.log_softmax(state_priors, dim=0)
+        return log_state_priors
+
+    def add_go_token(self, mel_inputs, batch_size, n_mel_channels):
+        assert n_mel_channels == self.hparams.n_mel_channels, "Mel channels not configured properly the input: {} and " \
+            "configuration: {} are different".format(n_mel_channels,
+                                                     self.hparams.n_mel_channels)
+
+        go_tokens = self.go_tokens.unsqueeze(0).expand(
+            batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
+        ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)
+        return ar_inputs
 
     def init_lstm_states(self, batch_size, hidden_state_dim, device_tensor):
         r"""
@@ -165,43 +174,21 @@ class HMM(nn.Module):
             (torch.FloatTensor): shape (batch_size, hidden_state_dim) can be hidden state for LSTM
             (torch.FloatTensor): shape (batch_size, hidden_state_dim) can be the cell state for LSTM
         """
-        return device_tensor.new_zeros(batch_size, hidden_state_dim), device_tensor.new_zeros(batch_size, hidden_state_dim)
-
-    def perform_data_dropout_of_ar_mel_inputs(self, mel_inputs, dropout_flag):
-        r"""
-        Takes mel frames as inputs and applies data dropout on it
-
-        Args:
-            mel_inputs (torch.FloatTensor): mel frames
-                shape: (batch, n_frames_per_step, n_mel_channels)
-            dropout_flag (Bool): to dropout during eval or not
-
-        Returns:
-            mel_inputs (torch.FloatTensor) : data droped out mel frames
-        """
-        batch_size, n_frame_per_step, _ = mel_inputs.shape
-
-        data_dropout_mask = F.dropout(mel_inputs.new_ones(
-            batch_size, n_frame_per_step), p=self.hparams.data_dropout, training=dropout_flag).unsqueeze(2)
-        mel_inputs = mel_inputs * data_dropout_mask
-        return mel_inputs
+        layers = self.hparams.post_prenet_rnn_layers
+        direction = 1
+        return device_tensor.new_zeros(direction * layers, batch_size, hidden_state_dim), device_tensor.new_zeros(direction * layers, batch_size, hidden_state_dim)
 
     def get_dropout_while_eval(self, dropout_while_eval: bool) -> bool:
         r"""
         Returns the flag to be true or false based on the value given during evaluation
 
         Args:
-            dropout_while_eval (bool): 
+            dropout_while_eval (bool):
 
         Returns:
             (bool): dropout flag
         """
-        if dropout_while_eval:
-            dropout_flag = True
-        else:
-            dropout_flag = self.training
-
-        return dropout_flag
+        return True if dropout_while_eval else self.training
 
     def get_absorption_state_scaling_factor(self, mel_inputs_lengths, log_alpha_scaled, text_lengths):
         r"""
@@ -232,7 +219,7 @@ class HMM(nn.Module):
             ~state_lengths_mask, -float("inf"))
 
         last_transition_vector = torch.gather(
-            self.transition_vector, 1, last_log_alpha_scaled_index).squeeze(1)
+            self.transition_vectors, 1, last_log_alpha_scaled_index).squeeze(1)
         last_transition_probability = torch.sigmoid(last_transition_vector)
         log_probability_of_transitioning = log_clamped(
             last_transition_probability)
@@ -290,30 +277,30 @@ class HMM(nn.Module):
             self.hparams.prenet_dropout_while_eval)
 
         while True:
-            if self.hparams.data_dropout_while_sampling:
-                dropout_mask = F.dropout(ar_mel_inputs.new_ones(
-                    ar_mel_inputs.shape[0], ar_mel_inputs.shape[1], 1), p=self.hparams.data_dropout)
-                ar_mel_inputs = dropout_mask * ar_mel_inputs
-
+            # Handle autoregression
             prenet_output = self.prenet(ar_mel_inputs.flatten(
                 1).unsqueeze(0), prenet_dropout_flag)
-            # will be 1 while sampling
-            h_post_prenet, c_post_prenet = self.post_prenet_rnn(
-                prenet_output.squeeze(0), (h_post_prenet, c_post_prenet))
+            _, (h_post_prenet, c_post_prenet) = self.post_prenet_rnn(
+                prenet_output, (h_post_prenet, c_post_prenet))
 
+            # Get mu, sigma and tau from the neural network
             z_t = encoder_outputs[:, current_z_number]
             mean, std, transition_vector = self.decoder(
                 h_post_prenet, z_t.unsqueeze(0))
+            mean, std, transition_vector = mean.squeeze(
+                1), std.squeeze(1), transition_vector.flatten()
+            transition_probability = torch.sigmoid(transition_vector)
+            staying_probability = torch.sigmoid(-transition_vector)
 
-            transition_probability = torch.sigmoid(transition_vector.flatten())
-            staying_probability = torch.sigmoid(-transition_vector.flatten())
             input_parameter_values.append([ar_mel_inputs, current_z_number])
             output_parameter_values.append([mean, std, transition_probability])
 
-            x_t = self.emission_model.sample(mean, std)
-
             if self.hparams.predict_means:
                 x_t = mean
+            else:
+                x_t = self.emission_model.sample(mean, std)
+
+            # Slide the AR window
             ar_mel_inputs = torch.cat((ar_mel_inputs, x_t), dim=1)[:, 1:]
 
             x.append(x_t.flatten())
@@ -321,6 +308,10 @@ class HMM(nn.Module):
             transition_matrix = torch.cat(
                 (staying_probability, transition_probability))
             quantile *= staying_probability
+
+            # Deterministic transition from the paper
+            # S. Ronanki, O. Watts, S. King, and G. E. Henter, “Median based generation
+            # of synthetic speech durations using a nonparametric approach,” in Proc. SLT, 2016.
 
             if not self.hparams.deterministic_transition:
                 switch = transition_matrix.multinomial(1)[0].item()
