@@ -22,8 +22,6 @@ class HMM(nn.Module):
 
         self.post_prenet_rnn = nn.LSTM(
             hparams.prenet_dim, hparams.post_prenet_rnn_dim, batch_first=True)
-        # self.post_prenet_rnn = nn.LSTMCell(
-        #     input_size=hparams.prenet_dim, hidden_size=hparams.post_prenet_rnn_dim)
 
         self.decoder = Decoder(hparams)
 
@@ -70,7 +68,7 @@ class HMM(nn.Module):
             self.hparams.prenet_dropout_while_eval)
 
         # Process Autoregression
-        ar_inputs = self.add_go_token(mel_inputs, batch_size, n_mel_channels)
+        ar_inputs = self.add_go_token(mel_inputs)
         ar_inputs_prenet = self.prenet(ar_inputs, prenet_dropout_flag)
         ar_rnn_output, (_, _) = self.post_prenet_rnn(ar_inputs_prenet)
         self.means, stds, self.transition_vectors = self.decoder(
@@ -143,21 +141,28 @@ class HMM(nn.Module):
         return log_c
 
     def initialize_log_state_priors(self, text_embeddings):
-        state_priors = text_embeddings.new_zeros([self.N])
-        state_priors[0] = 1
-        state_priors[1:] = -float("Inf")
+        log_state_priors = text_embeddings.new_full([self.N], -float("inf"))
+        log_state_priors[0] = 0.0
 
-        log_state_priors = F.log_softmax(state_priors, dim=0)
         return log_state_priors
 
-    def add_go_token(self, mel_inputs, batch_size, n_mel_channels):
+    def add_go_token(self, mel_inputs):
+        """Append the go token to create the autoregressive input
+
+        Args:
+            mel_inputs (torch.FloatTensor): (batch_size, T, n_mel_channel)
+
+        Returns:
+            ar_mel_inputs (torch.FloatTensor): (batch_size, T, n_mel_channel)
+        """
+        batch_size, T, n_mel_channels = mel_inputs.shape
         assert n_mel_channels == self.hparams.n_mel_channels, "Mel channels not configured properly the input: {} and " \
             "configuration: {} are different".format(n_mel_channels,
                                                      self.hparams.n_mel_channels)
 
         go_tokens = self.go_tokens.unsqueeze(0).expand(
             batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
-        ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)
+        ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)[:, :T]
         return ar_inputs
 
     def init_lstm_states(self, batch_size, hidden_state_dim, device_tensor):

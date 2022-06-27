@@ -11,6 +11,7 @@ from src.utilities.plotting import (plot_alpha_scaled_to_numpy,
 
 
 @rank_zero_only
+@torch.no_grad()
 def log_validation(logger, model, mel_output, mel_output_normalised, state_travelled, mel_targets,
                    input_parameters, output_parameters, iteration):
     """
@@ -94,7 +95,7 @@ def log_validation(logger, model, mel_output, mel_output_normalised, state_trave
     # Plotting means of most probable state
     max_state_numbers = torch.max(
         model.hmm.log_alpha_scaled[0, :, :], dim=1)[1]
-    means = torch.stack(model.hmm.means, dim=1).squeeze(0)
+    means = model.hmm.means.squeeze(0)
 
     max_len = means.shape[0]
     N = means.shape[1]
