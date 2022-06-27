@@ -42,7 +42,7 @@ def log_validation(logger, model, mel_output, mel_output_normalised, state_trave
     logger.add_image(
         "transition_probabilities",
         plot_transition_matrix(torch.sigmoid(
-            model.hmm.transition_vector[0, :, :])),
+            model.hmm.transition_vectors[0, :, :])),
         iteration, dataformats='HWC'
     )
 
