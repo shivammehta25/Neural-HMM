@@ -5,6 +5,7 @@ from torch import nn
 
 from src.model.Encoder import Encoder
 from src.model.HMM import HMM
+from torch.utils.checkpoint import checkpoint
 
 
 class NeuralHMM(nn.Module):
@@ -51,8 +52,8 @@ class NeuralHMM(nn.Module):
         text_inputs, text_lengths, mels, max_len, mel_lengths = inputs
         text_lengths, mel_lengths = text_lengths.data, mel_lengths.data
         embedded_inputs = self.embedding(text_inputs).transpose(1, 2)
-        encoder_outputs, text_lengths = self.encoder(
-            embedded_inputs, text_lengths)
+        encoder_outputs, text_lengths = checkpoint(self.encoder,
+                                                   embedded_inputs, text_lengths)
 
         log_probs = self.hmm(
             encoder_outputs, text_lengths, mels, mel_lengths)

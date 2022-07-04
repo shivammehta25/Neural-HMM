@@ -4,6 +4,7 @@ from src.model.Prenet import Prenet
 from src.utilities.functions import log_clamped
 from torch import nn
 from torch.nn import functional as F
+from torch.utils.checkpoint import checkpoint
 
 
 class HMM(nn.Module):
@@ -54,8 +55,7 @@ class HMM(nn.Module):
         batch_size = mel_inputs.shape[0]
         n_mel_channels = mel_inputs.shape[1]
         T_max = torch.max(mel_inputs_lengths)
-        N = text_embeddings.shape[1]
-        self.N = N
+        self.N = text_embeddings.shape[1]
         mel_inputs = mel_inputs.permute(0, 2, 1)
 
         # Intialize forward algorithm
