@@ -50,30 +50,29 @@ class HMM(nn.Module):
             log_prob (torch.FloatTensor): log probability of the sequence
         """
 
+        # Get dimensions of inputs
         batch_size = mel_inputs.shape[0]
         n_mel_channels = mel_inputs.shape[1]
         T_max = torch.max(mel_inputs_lengths)
-
-        N = text_embeddings.shape[1]
-        self.N = N
-
+        self.N = text_embeddings.shape[1]
         mel_inputs = mel_inputs.permute(0, 2, 1)
 
         assert n_mel_channels == self.hparams.n_mel_channels, "Mel channels not configured properly the input: {} and " \
             "configuration: {} are different".format(n_mel_channels,
                                                      self.hparams.n_mel_channels)
 
+        # Intialize forward algorithm
+        log_state_priors = self.initialize_log_state_priors(text_embeddings)
+
+        # Get dropout flag
+        prenet_dropout_flag = self.get_dropout_while_eval(
+            self.hparams.prenet_dropout_while_eval)
+
         go_tokens = self.go_tokens.unsqueeze(0).expand(
             batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
         # go_tokens.shape (4, 2, 80), mel_inputs.shape (4, 749, 80)
         ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)
         # ar_inputs.shape (4, 751, 80)
-
-        state_priors = text_embeddings.new_zeros([self.N])
-        state_priors[0] = 1
-        state_priors[1:] = -float("Inf")
-
-        log_state_priors = F.log_softmax(state_priors, dim=0)
 
         self.log_alpha_scaled = mel_inputs.new_zeros(
             (batch_size, T_max, self.N))
@@ -344,3 +343,18 @@ class HMM(nn.Module):
             x = x.tolist()
 
         return x, z, input_parameter_values, output_parameter_values
+
+    def initialize_log_state_priors(self, text_embeddings):
+        """
+        Creates the log pi in forward algorithm
+
+        Args:
+            text_embeddings (torch.FloatTensor): used to create the log pi on current device
+
+        Returns:
+            _type_: _description_
+        """
+        log_state_priors = text_embeddings.new_full([self.N], -float("inf"))
+        log_state_priors[0] = 0.0
+
+        return log_state_priors
