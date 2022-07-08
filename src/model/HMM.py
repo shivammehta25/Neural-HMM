@@ -57,41 +57,25 @@ class HMM(nn.Module):
         self.N = text_embeddings.shape[1]
         mel_inputs = mel_inputs.permute(0, 2, 1)
 
-        assert n_mel_channels == self.hparams.n_mel_channels, "Mel channels not configured properly the input: {} and " \
-            "configuration: {} are different".format(n_mel_channels,
-                                                     self.hparams.n_mel_channels)
-
         # Intialize forward algorithm
         log_state_priors = self.initialize_log_state_priors(text_embeddings)
+        log_c = self.initialize_forward_algorithm_variables(mel_inputs)
 
         # Get dropout flag
         prenet_dropout_flag = self.get_dropout_while_eval(
             self.hparams.prenet_dropout_while_eval)
-
-        go_tokens = self.go_tokens.unsqueeze(0).expand(
-            batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
-        # go_tokens.shape (4, 2, 80), mel_inputs.shape (4, 749, 80)
-        ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)
-        # ar_inputs.shape (4, 751, 80)
-
-        self.log_alpha_scaled = mel_inputs.new_zeros(
-            (batch_size, T_max, self.N))
-        log_c = mel_inputs.new_zeros(batch_size, T_max)
-
-        self.means = []
-
-        self.transition_vector = mel_inputs.new_zeros(
-            (batch_size, T_max, self.N))
-
-        h_post_prenet, c_post_prenet = self.init_lstm_states(
-            batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
         data_dropout_flag = self.get_dropout_while_eval(
             self.hparams.data_dropout_while_eval)
-        prenet_dropout_flag = self.get_dropout_while_eval(
-            self.hparams.prenet_dropout_while_eval)
 
-        prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
-            ar_inputs[:, 0: self.hparams.n_frames_per_step], data_dropout_flag)
+        # Initialize autoregression elements
+        ar_inputs = self.add_go_token(mel_inputs)
+        h_post_prenet, c_post_prenet = self.init_lstm_states(
+            batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
+
+        def process_ar_at_timestep(t, ar_inputs, h_post_prenet, c_post_prenet):
+            prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
+                ar_inputs[:, 0: self.hparams.n_frames_per_step], data_dropout_flag)
+            pass
 
         ar_inputs_prenet = self.prenet(
             prenet_input.flatten(1), prenet_dropout_flag)
@@ -149,6 +133,45 @@ class HMM(nn.Module):
         log_probs = torch.sum(log_c, dim=1) + sum_final_log_c
 
         return log_probs
+
+    def add_go_token(self, mel_inputs):
+        """Append the go token to create the autoregressive input
+        Args:
+            mel_inputs (torch.FloatTensor): (batch_size, T, n_mel_channel)
+        Returns:
+            ar_mel_inputs (torch.FloatTensor): (batch_size, T, n_mel_channel)
+        """
+        batch_size, T, n_mel_channels = mel_inputs.shape
+
+        assert n_mel_channels == self.hparams.n_mel_channels, "Mel channels not configured properly the input: {} and " \
+            "configuration: {} are different".format(n_mel_channels,
+                                                     self.hparams.n_mel_channels)
+
+        go_tokens = self.go_tokens.unsqueeze(0).expand(
+            batch_size, self.hparams.n_frames_per_step, self.hparams.n_mel_channels)
+        ar_inputs = torch.cat((go_tokens, mel_inputs), dim=1)[:, :T]
+        return ar_inputs
+
+    def initialize_forward_algorithm_variables(self, mel_inputs):
+        r"""
+        Initialize placeholders for forward algorithm variables, to use a stable version we will use
+        log_alpha_scaled and the scaling constant
+        Args:
+            mel_inputs (torch.FloatTensor): (batch_size, T, n_mel_channels)
+        Returns:
+            log_c (torch.FloatTensor): Scaling constant (batch_size, T)
+        """
+        batch_size, T_max, _ = mel_inputs.shape
+        self.log_alpha_scaled = mel_inputs.new_zeros(
+            (batch_size, T_max, self.N))
+        log_c = mel_inputs.new_zeros(batch_size, T_max)
+
+        self.means = []
+
+        self.transition_vector = mel_inputs.new_zeros(
+            (batch_size, T_max, self.N))
+
+        return log_c
 
     def init_lstm_states(self, batch_size, hidden_state_dim, device_tensor):
         r"""
