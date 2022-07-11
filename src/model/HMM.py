@@ -72,7 +72,7 @@ class HMM(nn.Module):
         h_post_prenet, c_post_prenet = self.init_lstm_states(
             batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
 
-        for t in range(1, T_max):
+        for t in range(T_max):
 
             # Process Autoregression
             h_post_prenet, c_post_prenet = self.process_ar_timestep(
