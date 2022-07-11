@@ -72,60 +72,34 @@ class HMM(nn.Module):
         h_post_prenet, c_post_prenet = self.init_lstm_states(
             batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
 
-        def process_ar_at_timestep(t, ar_inputs, h_post_prenet, c_post_prenet):
-            prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
-                ar_inputs[:, 0: self.hparams.n_frames_per_step], data_dropout_flag)
-            pass
-
-        ar_inputs_prenet = self.prenet(
-            prenet_input.flatten(1), prenet_dropout_flag)
-        h_post_prenet, c_post_prenet = self.post_prenet_rnn(
-            ar_inputs_prenet, (h_post_prenet, c_post_prenet))
-
-        mean, std, transition_vector = self.decoder(
-            h_post_prenet, text_embeddings)
-        self.transition_vector[:, 0] = transition_vector
-        self.means.append(mean.detach())
-
-        log_alpha_temp = log_state_priors + self.emission_model(mel_inputs[:, 0], mean,
-                                                                std, text_lengths)
-
-        log_c[:, 0] = torch.logsumexp(log_alpha_temp, dim=1)
-        self.log_alpha_scaled[:, 0, :] = log_alpha_temp - \
-            log_c[:, 0].unsqueeze(1)
-
-        self.transition_vector = mel_inputs.new_zeros(
-            (batch_size, T_max, self.N))
-
         for t in range(1, T_max):
-            prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
-                ar_inputs[:, t: t + self.hparams.n_frames_per_step], data_dropout_flag)
-            ar_inputs_prenet = self.prenet(
-                prenet_input.flatten(1), prenet_dropout_flag)
 
-            h_post_prenet, c_post_prenet = self.post_prenet_rnn(
-                ar_inputs_prenet, (h_post_prenet, c_post_prenet))
+            # Process Autoregression
+            h_post_prenet, c_post_prenet = self.process_ar_timestep(
+                t, ar_inputs, h_post_prenet, c_post_prenet, data_dropout_flag, prenet_dropout_flag)
 
+            # Get mean, std and transition vector from decoder for this timestep
             mean, std, transition_vector = self.decoder(
                 h_post_prenet, text_embeddings)
-            log_alpha_temp = self.emission_model(mel_inputs[:, t], mean,
-                                                 std, text_lengths) + self.transition_model(
-                self.log_alpha_scaled[:, t - 1, :], transition_vector, text_lengths)
+
+            # Forward algorithm for this timestep
+            if t == 0:
+                log_alpha_temp = log_state_priors + self.emission_model(mel_inputs[:, 0], mean,
+                                                                        std, text_lengths)
+            else:
+                log_alpha_temp = self.emission_model(mel_inputs[:, t], mean,
+                                                     std, text_lengths) + self.transition_model(
+                    self.log_alpha_scaled[:, t - 1, :], transition_vector, text_lengths)
+
             log_c[:, t] = torch.logsumexp(log_alpha_temp, dim=1)
             self.log_alpha_scaled[:, t,
                                   :] = log_alpha_temp - log_c[:, t].unsqueeze(1)
-            self.transition_vector[:, t] = transition_vector
+
+            # Save for plotting
+            self.transition_vector[:, t] = transition_vector.detach()
             self.means.append(mean.detach())
 
-        mask_tensor = mel_inputs.new_zeros(T_max)
-        mask_log_c = (torch.arange(T_max, out=mask_tensor).expand(
-            len(mel_inputs_lengths), T_max) < (mel_inputs_lengths).unsqueeze(1))
-
-        log_c = log_c * mask_log_c
-
-        mask_log_alpha_scaled = mask_log_c.unsqueeze(2)
-
-        self.log_alpha_scaled = self.log_alpha_scaled * mask_log_alpha_scaled
+        log_c = self.mask_lengths(mel_inputs, mel_inputs_lengths, log_c)
 
         sum_final_log_c = self.get_absorption_state_scaling_factor(
             mel_inputs_lengths, self.log_alpha_scaled, text_lengths)
@@ -133,6 +107,61 @@ class HMM(nn.Module):
         log_probs = torch.sum(log_c, dim=1) + sum_final_log_c
 
         return log_probs
+
+    def mask_lengths(self, mel_inputs, mel_inputs_lengths, log_c):
+        """
+        Mask the lengths of the forward variables so that the variable lenghts 
+        do not contribute in the loss calculation
+        Args:
+            mel_inputs (torch.FloatTensor): (batch, T, n_mel_channels)
+            mel_inputs_lengths (torch.IntTensor): (batch)
+            log_c (torch.FloatTensor): (batch, T)
+        Returns:
+            log_c (torch.FloatTensor) : scaled probabilities (batch, T)
+        """
+        batch_size, T, n_mel_channel = mel_inputs.shape
+
+        # create len mask
+        mask_tensor = mel_inputs.new_zeros(T)
+        mask_log_c = (torch.arange(T, out=mask_tensor).expand(
+            len(mel_inputs_lengths), T) < (mel_inputs_lengths).unsqueeze(1))
+        # mask log_c
+        log_c = log_c * mask_log_c
+
+        # mask log_alpha_scaled
+        mask_log_alpha_scaled = mask_log_c.unsqueeze(2)
+        self.log_alpha_scaled = self.log_alpha_scaled * mask_log_alpha_scaled
+
+        return log_c
+
+    def process_ar_timestep(self, t, ar_inputs, h_post_prenet, c_post_prenet, data_dropout_flag, prenet_dropout_flag):
+        """
+        Process autoregression in timestep
+        1. At a specific t timestep
+        2. Perform data dropout if applied (we did not use it)
+        3. Run the autoregressive frame through the prenet (has dropout)
+        4. Run the prenet output through the post prenet rnn
+
+        Args:
+            t (int): mel-spec timestep
+            ar_inputs (torch.FloatTensor): go-token appended mel-spectrograms
+            h_post_prenet (torch.FloatTensor): previous timestep rnn hidden state
+            c_post_prenet (torch.FloatTensor): previous timestep rnn cell state
+            data_dropout_flag (bool): data dropout flag
+            prenet_dropout_flag (bool): data dropout flag
+
+        Returns:
+            h_post_prenet (torch.FloatTensor): rnn hidden state of the current timestep
+            c_post_prenet (torch.FloatTensor): rnn cell state of the current timestep
+        """
+        prenet_input = self.perform_data_dropout_of_ar_mel_inputs(
+            ar_inputs[:, t: t + self.hparams.n_frames_per_step], data_dropout_flag)
+        ar_inputs_prenet = self.prenet(
+            prenet_input.flatten(1), prenet_dropout_flag)
+        h_post_prenet, c_post_prenet = self.post_prenet_rnn(
+            ar_inputs_prenet, (h_post_prenet, c_post_prenet))
+
+        return h_post_prenet, c_post_prenet
 
     def add_go_token(self, mel_inputs):
         """Append the go token to create the autoregressive input
@@ -166,8 +195,8 @@ class HMM(nn.Module):
             (batch_size, T_max, self.N))
         log_c = mel_inputs.new_zeros(batch_size, T_max)
 
+        # Saving for plotting later, will not have gradient tapes
         self.means = []
-
         self.transition_vector = mel_inputs.new_zeros(
             (batch_size, T_max, self.N))
 
