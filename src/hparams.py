@@ -66,7 +66,7 @@ def create_hparams(generate_parameters=False):
         ################################
         # Data Parameters             #
         ################################
-        batch_size=6,
+        batch_size=7,
         load_mel_from_disk=False,
         training_files='data/filelists/ljs_audio_text_train_filelist.txt',
         validation_files='data/filelists/ljs_audio_text_val_filelist.txt',

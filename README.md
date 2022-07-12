@@ -14,7 +14,8 @@
 [docker_install_link]: https://docs.docker.com/get-docker/
 [tacotron2_link]: https://github.com/NVIDIA/tacotron2
 [pretrained_model_link]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM.ckpt
-[nvidia_waveglow_link]: https://drive.google.com/file/d/1rpK8CzAAirq9sWZhe9nlfvxMF1dRgFbF/view
+[hifigan_all]: https://drive.google.com/drive/folders/1-eEYTB5Av9jNql0WGBlRoi-WH2J7bp5Y
+[hifigan_t2]: https://drive.google.com/drive/folders/1dqpUYEYF_hH7T0rII9_VQbps45FvNBqf
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
 
@@ -44,7 +45,8 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 ## Synthesis
 1. Download our [pre-trained LJ Speech model][pretrained_model_link]. 
 (This is the exact same model as system NH2 in the paper, but with training continued until reaching 200k updates total.)
-2. Download Nvidia's [WaveGlow model][nvidia_waveglow_link].
+2. Download HiFi gan pretrained [HiFiGAN model][hifigan_all].
+    - We recommend using [fine tuned][hifigan_t2] on Tacotron2 if you cannot finetune on NeuralHMM. 
 3. Run jupyter notebook and open ```synthesis.ipynb```.
 
 
