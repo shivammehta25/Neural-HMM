@@ -20,6 +20,7 @@ class NeuralHMM(nn.Module):
                        hparams.symbols_embedding_dim))
             val = sqrt(3.0) * std  # uniform bounds for std
             self.embedding.weight.data.uniform_(-val, val)
+
         self.encoder = Encoder(hparams)
         self.hmm = HMM(hparams)
         self.logger = hparams.logger
