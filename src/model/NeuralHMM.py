@@ -7,6 +7,10 @@ from src.model.Encoder import Encoder
 from src.model.HMM import HMM
 
 
+from src.utilities.monotonic_align import maximum_path
+from src.utilities.functions import sequence_mask
+
+
 class NeuralHMM(nn.Module):
     def __init__(self, hparams):
         super(NeuralHMM, self).__init__()
@@ -56,6 +60,16 @@ class NeuralHMM(nn.Module):
 
         log_probs = self.hmm(
             encoder_outputs, text_lengths, mels, mel_lengths)
+
+        text_mask = sequence_mask(text_lengths).float().unsqueeze(1)
+        mel_mask = sequence_mask(mel_lengths).float().unsqueeze(1)
+        attn_mask = (torch.unsqueeze(text_mask, -1) *
+                     torch.unsqueeze(mel_mask, 2)).squeeze(1)
+        attn = maximum_path(self.hmm.log_alpha_scaled.transpose(
+            1, 2).contiguous(), attn_mask).detach()
+
+        filtered_states = torch.matmul(attn.squeeze(
+            1).transpose(1, 2), encoder_outputs).transpose(1, 2)
 
         return log_probs
 

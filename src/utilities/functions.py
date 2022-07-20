@@ -96,3 +96,19 @@ def masked_log_softmax(vec, dim=0):
     idx = softmax_values != 0
     softmax_values[idx] = torch.log(softmax_values[idx])
     return softmax_values
+
+
+def sequence_mask(length, max_length=None):
+    """Sequence mask for sequence padding.
+
+    Args:
+        length (torch.Tensor): tensor of lists of lengths
+        max_length (int, optional): if given uses this to get max len otherwise uses the tensor. Defaults to None.
+
+    Returns:
+        torch.Tensor: Mask containing 1s up to the max length and 0s for the rest.
+    """
+    if max_length is None:
+        max_length = length.max()
+    x = torch.arange(max_length, dtype=length.dtype, device=length.device)
+    return x.unsqueeze(0) < length.unsqueeze(1)

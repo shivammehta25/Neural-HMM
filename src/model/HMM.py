@@ -108,6 +108,80 @@ class HMM(nn.Module):
 
         return log_probs
 
+
+def _forward_with_states(self, states_per_timestep, text_lengths, mel_inputs, mel_inputs_lengths):
+        r"""
+        HMM forward pass for training
+
+        Args:
+            text_embeddings (torch.FloatTensor): Encoder outputs (32, 147, 512)
+            text_lengths (torch.LongTensor): Encoder output lengths for attention masking. this is text length (32)
+            mel_inputs (torch.FloatTensor): HMM inputs for teacher forcing. i.e. mel-specs (32, 80, 868)
+            mel_inputs_lengths (torch.LongTensor): Length of mel inputs (32)
+
+        Returns:
+            log_prob (torch.FloatTensor): log probability of the sequence
+        """
+
+        # Get dimensions of inputs
+        batch_size = mel_inputs.shape[0]
+        n_mel_channels = mel_inputs.shape[1]
+        T_max = torch.max(mel_inputs_lengths)
+        self.N = states_per_timestep.shape[1]
+        mel_inputs = mel_inputs.permute(0, 2, 1)
+
+        # Intialize forward algorithm
+        log_state_priors = self.initialize_log_state_priors(
+            states_per_timestep)
+        log_c = self.initialize_forward_algorithm_variables(mel_inputs)
+
+        # Get dropout flag
+        prenet_dropout_flag = self.get_dropout_while_eval(
+            self.hparams.prenet_dropout_while_eval)
+        data_dropout_flag = self.get_dropout_while_eval(
+            self.hparams.data_dropout_while_eval)
+
+        # Initialize autoregression elements
+        ar_inputs = self.add_go_token(mel_inputs)
+        h_post_prenet, c_post_prenet = self.init_lstm_states(
+            batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
+
+        for t in range(T_max):
+
+            # Process Autoregression
+            h_post_prenet, c_post_prenet = self.process_ar_timestep(
+                t, ar_inputs, h_post_prenet, c_post_prenet, data_dropout_flag, prenet_dropout_flag)
+
+            # Get mean, std and transition vector from decoder for this timestep
+            mean, std, transition_vector = self.decoder(
+                h_post_prenet, states_per_timestep)
+
+            # Forward algorithm for this timestep
+            if t == 0:
+                log_alpha_temp = log_state_priors + self.emission_model(mel_inputs[:, 0], mean,
+                                                                        std, text_lengths)
+            else:
+                log_alpha_temp = self.emission_model(mel_inputs[:, t], mean,
+                                                     std, text_lengths) + self.transition_model(
+                    self.log_alpha_scaled[:, t - 1, :], transition_vector, text_lengths)
+
+            log_c[:, t] = torch.logsumexp(log_alpha_temp, dim=1)
+            self.log_alpha_scaled[:, t,
+                                  :] = log_alpha_temp - log_c[:, t].unsqueeze(1)
+
+            # Save for plotting
+            self.transition_vector[:, t] = transition_vector.detach()
+            self.means.append(mean.detach())
+
+        log_c = self.mask_lengths(mel_inputs, mel_inputs_lengths, log_c)
+
+        sum_final_log_c = self.get_absorption_state_scaling_factor(
+            mel_inputs_lengths, self.log_alpha_scaled, text_lengths)
+
+        log_probs = torch.sum(log_c, dim=1) + sum_final_log_c
+
+        return log_probs
+
     def mask_lengths(self, mel_inputs, mel_inputs_lengths, log_c):
         """
         Mask the lengths of the forward variables so that the variable lenghts 
