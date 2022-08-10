@@ -131,6 +131,11 @@ class TrainingModule(pl.LightningModule):
         mels = mels[0].unsqueeze(0).to(self.device)
         max_len = torch.max(text_lengths).data
         mel_lengths = mel_lengths[0].unsqueeze(0).to(self.device)
+        # Sometimes in a batch the element which has the maximum mel len
+        # is not the same as the element which has the maximum text len.
+        # This prevent the model to break down when plotting validation.
+        mels = mels[:, :, :mel_lengths.item()]
+
         return text_inputs, text_lengths, mels, max_len, mel_lengths
 
     def inference(self, text_inputs):

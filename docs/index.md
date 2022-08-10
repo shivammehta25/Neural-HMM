@@ -39,7 +39,8 @@ For more information, please [read our ICASSP 2022 paper here][arxiv_link].
 
 ## Architecture
 
-![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of neural HMM TTS")
+<!-- ![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of neural HMM TTS") -->
+![Synthesising from Neural-HMM](images/model_video.gif "Architecture of neural HMM TTS")
 
 <!-- ## Web Example
 <iframe url="http://130.237.67.68:8501/" height="400" width="100%" title="Web Example"> </iframe> -->
