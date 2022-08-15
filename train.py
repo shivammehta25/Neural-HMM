@@ -12,7 +12,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning.utilities.seed import seed_everything
 
-from run_tests import run_tests
 from src.data_module import LightningLoader
 from src.hparams import create_hparams
 from src.training_module import TrainingModule
@@ -58,9 +57,6 @@ if __name__ == '__main__':
 
     hparams.warm_start = args.warm_start
     hparams.checkpoint_path = args.checkpoint_path
-
-    if hparams.run_tests:
-        run_tests()
 
     seed_everything(hparams.seed)
 

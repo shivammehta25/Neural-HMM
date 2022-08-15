@@ -4,7 +4,6 @@ data.py
 Utilities for processing of Data
 """
 import random
-from typing import Any, List
 
 import numpy as np
 import torch
@@ -29,12 +28,12 @@ def load_wav_to_torch(full_path):
 
 
 def load_filepaths_and_text(filename, split="|"):
-    with open(filename, encoding='utf-8') as f:
+    with open(filename, encoding="utf-8") as f:
         filepaths_and_text = [line.strip().split(split) for line in f]
     return filepaths_and_text
 
 
-class TextMelCollate():
+class TextMelCollate:
     r""" 
     Zero-pads model inputs and targets based on number of frames per setep
     """
@@ -51,34 +50,32 @@ class TextMelCollate():
         """
         # Right zero-pad all one-hot text sequences to max input length
         input_lengths, ids_sorted_decreasing = torch.sort(
-            torch.LongTensor([len(x[0]) for x in batch]),
-            dim=0, descending=True)
+            torch.LongTensor([len(x[0]) for x in batch]), dim=0, descending=True
+        )
         max_input_len = input_lengths[0]
 
         text_padded = torch.LongTensor(len(batch), max_input_len)
         text_padded.zero_()
         for i in range(len(ids_sorted_decreasing)):
             text = batch[ids_sorted_decreasing[i]][0]
-            text_padded[i, :text.size(0)] = text
+            text_padded[i, : text.size(0)] = text
 
         # Right zero-pad mel-spec
         num_mels = batch[0][1].size(0)
         max_target_len = max([x[1].size(1) for x in batch])
 
-        # include mel padded and gate padded
+        # include mel padded
         mel_padded = torch.FloatTensor(len(batch), num_mels, max_target_len)
         mel_padded.zero_()
-        gate_padded = torch.FloatTensor(len(batch), max_target_len)
-        gate_padded.zero_()
         output_lengths = torch.LongTensor(len(batch))
         for i in range(len(ids_sorted_decreasing)):
             mel = batch[ids_sorted_decreasing[i]][1]
-            mel_padded[i, :, :mel.size(1)] = mel
-            gate_padded[i, mel.size(1)-1:] = 1
+            mel_padded[i, :, : mel.size(1)] = mel
             output_lengths[i] = mel.size(1)
 
-        return text_padded, input_lengths, mel_padded, gate_padded, \
-            output_lengths
+        # torch.empty is a substite for gate_padded, will be removed later when more
+        # test ensures there is no regression
+        return text_padded, input_lengths, mel_padded, torch.empty([1]), output_lengths
 
 
 class TextMelLoader(Dataset):
@@ -97,8 +94,7 @@ class TextMelLoader(Dataset):
             hparams:
             transform (list): list of transformation
         """
-        self.audiopaths_and_text = load_filepaths_and_text(
-            audiopaths_and_text)
+        self.audiopaths_and_text = load_filepaths_and_text(audiopaths_and_text)
         self.transform = transform
         self.text_cleaners = hparams.text_cleaners
         self.max_wav_value = hparams.max_wav_value
@@ -107,15 +103,21 @@ class TextMelLoader(Dataset):
         self.cmu_phonetiser = hparams.cmu_phonetiser
         self.load_mel_from_disk = hparams.load_mel_from_disk
         self.stft = TacotronSTFT(
-            hparams.filter_length, hparams.hop_length, hparams.win_length,
-            hparams.n_mel_channels, hparams.sampling_rate, hparams.mel_fmin,
-            hparams.mel_fmax)
+            hparams.filter_length,
+            hparams.hop_length,
+            hparams.win_length,
+            hparams.n_mel_channels,
+            hparams.sampling_rate,
+            hparams.mel_fmin,
+            hparams.mel_fmax,
+        )
         random.seed(hparams.seed)
         random.shuffle(self.audiopaths_and_text)
 
     def get_mel_text_pair(self, audiopath_and_text):
         r"""
-        Takes audiopath_text list input where list[0] is location for wav file and list[1] is the text
+        Takes audiopath_text list input where list[0] is location for wav file
+            and list[1] is the text
         Args:
             audiopath_and_text (list): list of size 2
         """
@@ -139,19 +141,23 @@ class TextMelLoader(Dataset):
         if not self.load_mel_from_disk:
             audio, sampling_rate = load_wav_to_torch(filename)
             if sampling_rate != self.stft.sampling_rate:
-                raise ValueError("{} {} SR doesn't match target {} SR".format(
-                    sampling_rate, self.stft.sampling_rate))
+                raise ValueError(
+                    "{} SR doesn't match target {} SR".format(
+                        sampling_rate, self.stft.sampling_rate
+                    )
+                )
             audio_norm = audio / self.max_wav_value
             audio_norm = audio_norm.unsqueeze(0)
-            audio_norm = torch.autograd.Variable(
-                audio_norm, requires_grad=False)
+            audio_norm = torch.autograd.Variable(audio_norm, requires_grad=False)
             melspec = self.stft.mel_spectrogram(audio_norm)
             melspec = torch.squeeze(melspec, 0)
         else:
             melspec = torch.from_numpy(np.load(filename))
-            assert melspec.size(0) == self.stft.n_mel_channels, (
-                'Mel dimension mismatch: given {}, expected {}'.format(
-                    melspec.size(0), self.stft.n_mel_channels))
+            assert (
+                melspec.size(0) == self.stft.n_mel_channels
+            ), "Mel dimension mismatch: given {}, expected {}".format(
+                melspec.size(0), self.stft.n_mel_channels
+            )
 
         return melspec
 

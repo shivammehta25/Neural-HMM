@@ -59,7 +59,7 @@ class NeuralHMM(nn.Module):
 
         return log_probs
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def inference(self, text_inputs):
         r"""
         Sampling audio based on single text input
