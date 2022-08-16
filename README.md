@@ -65,6 +65,15 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 * If you encounter this error message ```[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)```, this is a known issue in [PyTorch Dataloader][pytorch_dataloader_issue_link]. 
 * It will be fixed when PyTorch releases a new Docker container image with updated version of Torch. If you are not using docker this can be removed with ```torch > 1.9.1```
 
+#### Torchmetric error on RTX 3090
+* If you encoder this error message ```ImportError: cannot import name 'get_num_classes' from 'torchmetrics.utilities.data' (/opt/conda/lib/python3.8/site-packages/torchmetrics/utilities/data.py)```
+* Update the requirement.txt file with these requirements: 
+```python
+torch==1.11.0a0+b6df043
+--extra-index-url https://download.pytorch.org/whl/cu113
+torchmetrics==0.6.0
+```
+
 ## Support
 If you have any questions or comments, please open an [issue][github_new_issue_link] on our GitHub repository.
 
