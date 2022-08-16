@@ -1,4 +1,5 @@
 import pytest
+import torch
 from src.hparams import create_hparams
 
 from src.utilities.data import TextMelCollate
@@ -32,3 +33,12 @@ def dummy_data(dummy_data_uncollated, hparams):
         output_lengths,
     ) = TextMelCollate(hparams.n_frames_per_step)(dummy_data_uncollated)
     return text_padded, input_lengths, mel_padded, gate_padded, output_lengths
+
+
+@pytest.fixture
+def dummy_embedded_data(dummy_data, hparams):
+    text_padded, input_lengths, mel_padded, gate_padded, output_lengths = dummy_data
+    embedded_input = torch.nn.Embedding(
+        hparams.n_symbols, hparams.symbols_embedding_dim
+    )(text_padded)
+    return (embedded_input, input_lengths, mel_padded, gate_padded, output_lengths)
