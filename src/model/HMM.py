@@ -354,9 +354,9 @@ class HMM(nn.Module):
 
         final_log_c = last_log_alpha_scaled + log_probability_of_transitioning
 
-        # Uncomment the line below if you get nan values because of
-        # low precision in half precision training
-        # final_log_c = final_log_c.clamp(min=1e-8)
+        # Uncomment the line below if you get nan values because of low precision
+        # in half precision training
+        # final_log_c = final_log_c.clamp(min=torch.finfo(final_log_c).min)
 
         sum_final_log_c = torch.logsumexp(final_log_c, dim=1)
         return sum_final_log_c
