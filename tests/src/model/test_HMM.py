@@ -212,3 +212,22 @@ def test_get_absorption_state_scaling_factor(
     sum_final_log_c_computed = torch.logsumexp(torch.stack(outputs), dim=1)
 
     assert (sum_final_log_c_computed == sum_final_log_c).all()
+
+
+def test_sample(hparams, dummy_embedded_data, test_batch_size):
+    model = HMM(hparams)
+    (
+        embedded_input,
+        input_lengths,
+        mel_padded,
+        _,
+        output_lengths,
+    ) = dummy_embedded_data
+
+    (mel_output, states_travelled, input_parameters, output_parameters) = model.sample(
+        embedded_input[0:1]
+    )
+    assert len(mel_output[0]) == hparams.n_mel_channels
+    assert input_parameters[0][0].shape[-1] == hparams.n_mel_channels
+    assert output_parameters[0][0].shape[-1] == hparams.n_mel_channels
+    assert output_parameters[0][1].shape[-1] == hparams.n_mel_channels
