@@ -1,7 +1,7 @@
 """
 Parameter Model
-This model takes state as an input and generates its parameters i.e mean, standard deviation
-and the probability of transition to the next state
+This model takes state as an input and generates its parameters
+i.e mean, standard deviation and the probability of transition to the next state
 """
 import torch
 import torch.nn as nn
@@ -12,10 +12,20 @@ from src.utilities.functions import inverse_sigmod, inverse_softplus
 
 class ParameterModel(nn.Module):
     r"""
-    Generate means of the current state based on current state value and previous observations
+    Generate means of the current state based on current state value
+    and previous observations
     """
 
-    def __init__(self, parameternetwork, input_size, output_size, step_size, init_transition_probability, init_mean, init_std):
+    def __init__(
+        self,
+        parameternetwork,
+        input_size,
+        output_size,
+        step_size,
+        init_transition_probability,
+        init_mean,
+        init_std,
+    ):
         r"""
 
         Args:
@@ -31,23 +41,27 @@ class ParameterModel(nn.Module):
 
         self.output_size = output_size
 
-        self.layers = nn.ModuleList([
-            LinearReluInitNorm(inp, out) for inp, out in
-            zip([input_size] + parameternetwork[:-1],
-                parameternetwork)
-        ])
+        self.layers = nn.ModuleList(
+            [
+                LinearReluInitNorm(inp, out)
+                for inp, out in zip(
+                    [input_size] + parameternetwork[:-1], parameternetwork
+                )
+            ]
+        )
         last_layer = nn.Linear(parameternetwork[-1], output_size)
         last_layer.weight.data.zero_()
         last_layer.bias.data[0:step_size] = init_mean
-        last_layer.bias.data[step_size: 2 *
-                             step_size] = inverse_softplus(init_std)
-        last_layer.bias.data[2 *
-                             step_size:] = inverse_sigmod(init_transition_probability)
+        last_layer.bias.data[step_size : 2 * step_size] = inverse_softplus(init_std)
+        last_layer.bias.data[2 * step_size :] = inverse_sigmod(
+            init_transition_probability
+        )
         self.layers.append(last_layer)
 
     def forward(self, x):
         r"""
-        Inputs 2nd order auto regression values and returns the means for that observations
+        Inputs 2nd order auto regression values and returns the means for that
+            observations
         Args:
             x (torch.FloatTensor): shape (batch, maxlength, prenet_dim)
             states (torch.FloatTensor):  shape (hidden_states)
@@ -67,8 +81,9 @@ class ParameterModel(nn.Module):
 
 class Decoder(nn.Module):
     r"""
-    This network takes current state and previous observed values as input and returns its parameters, mean,
-    standard deviation and probability of transition to the next state
+    This network takes current state and previous observed values as input
+    and returns its parameters, mean, standard deviation and probability
+    of transition to the next state
     """
 
     def __init__(self, hparams):
@@ -86,7 +101,14 @@ class Decoder(nn.Module):
         self.validate_parameters()
 
         self.decoder_network = ParameterModel(
-            hparams.parameternetwork, input_size, output_size, hparams.n_mel_channels, hparams.init_transition_probability, hparams.init_mean, hparams.init_std)
+            hparams.parameternetwork,
+            input_size,
+            output_size,
+            hparams.n_mel_channels,
+            hparams.init_transition_probability,
+            hparams.init_mean,
+            hparams.init_std,
+        )
 
     def validate_parameters(self):
         """
@@ -98,15 +120,21 @@ class Decoder(nn.Module):
         """
         if len(self.hparams.parameternetwork) < 1:
             raise ValueError(
-                "Parameter Network must have atleast one layer check the config file for parameter network")
+                "Parameter Network must have atleast one layer check the config file \
+                for parameter network"
+            )
         if not (0 < self.hparams.init_transition_probability < 1):
             raise ValueError(
-                "Invalid value for initial transitioning probability should be within (0, 1) but was given {}".format(
-                    self.hparams.init_transition_probability))
+                "Invalid value for initial transitioning probability should be within \
+                    (0, 1) but was given {}".format(
+                    self.hparams.init_transition_probability
+                )
+            )
 
     def forward(self, ar_mel_inputs, states):
         r"""
-        Inputs observation and returns the means, stds and transition probability for the current state
+        Inputs observation and returns the means, stds and transition probability
+        for the current state
 
         Args:
             ar_mel_inputs (torch.FloatTensor): shape (batch, prenet_dim)
@@ -121,31 +149,34 @@ class Decoder(nn.Module):
                 shape: (batch, hidden_states)
         """
         batch_size, prenet_dim = ar_mel_inputs.shape[0], ar_mel_inputs.shape[1]
-        N, N_dim = states.shape[1], states.shape[2]
+        N = states.shape[1]
 
-        ar_mel_inputs = ar_mel_inputs.unsqueeze(
-            1).expand(batch_size, N, prenet_dim)
+        ar_mel_inputs = ar_mel_inputs.unsqueeze(1).expand(batch_size, N, prenet_dim)
         ar_mel_inputs = torch.cat((ar_mel_inputs, states), dim=2)
         ar_mel_inputs = self.decoder_network(ar_mel_inputs)
 
-        mean, std, transition_vector = ar_mel_inputs[:, :, 0: self.hparams.n_mel_channels], ar_mel_inputs[:, :,
-                                                                                                          self.hparams.n_mel_channels: 2*self.hparams.n_mel_channels], ar_mel_inputs[:, :, 2*self.hparams.n_mel_channels:].squeeze(2)
+        mean, std, transition_vector = (
+            ar_mel_inputs[:, :, 0 : self.hparams.n_mel_channels],
+            ar_mel_inputs[
+                :, :, self.hparams.n_mel_channels : 2 * self.hparams.n_mel_channels
+            ],
+            ar_mel_inputs[:, :, 2 * self.hparams.n_mel_channels :].squeeze(2),
+        )
         std = F.softplus(std)
-        self.floor_variance(std)
+        std = self.floor_variance(std)
 
         return mean, std, transition_vector
 
-    @torch.no_grad()
     def floor_variance(self, std):
         r"""
         It clamps the standard deviation to not to go below some level
-        This removes the problem the model over learns for a state and the gaussian is converted to point mass
-        resulting in improper probability for data points
+        This removes the problem the model over learns for a state and the gaussian
+        is converted to point mass resulting in improper probability for data points
 
         Args:
             std (float Tensor): tensor containing the standard deviation to be
         """
         original_tensor = std.clone().detach()
-        torch.clamp_(std.data, min=self.hparams.variance_floor)
+        std = torch.clamp(std, min=self.hparams.variance_floor)
         if torch.any(original_tensor != std):
             print("Variance Floored")
