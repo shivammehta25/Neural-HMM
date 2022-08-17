@@ -3,15 +3,11 @@ functions.py
 
 File for custom utility functions to improve numerical precision
 """
-import os
-import random
-
-import numpy as np
 import torch
 
 
 def log_clamped(x, eps=1e-04):
-    clamped_x = torch.clamp(x, min=eps)
+    clamped_x = torch.clamp(x, min=eps, max=1.0 - eps)
     return torch.log(clamped_x)
 
 
@@ -35,17 +31,18 @@ def inverse_softplus(x):
 
 def logsumexp(x, dim):
     r"""
-    Differentiable LogSumExp: Does not creates nan gradients when all the inputs are -inf
+    Differentiable LogSumExp: Does not creates nan gradients
+        when all the inputs are -inf
     Args:
         x : torch.Tensor -  The input tensor
         dim: int - The dimension on which the log sum exp has to be applied
     """
 
     m, _ = x.max(dim=dim)
-    mask = m == -float('inf')
+    mask = m == -float("inf")
 
     s = (x - m.masked_fill_(mask, 0).unsqueeze(dim=dim)).exp().sum(dim=dim)
-    return s.masked_fill_(mask, 1).log() + m.masked_fill_(mask, -float('inf'))
+    return s.masked_fill_(mask, 1).log() + m.masked_fill_(mask, -float("inf"))
 
 
 def log_domain_matmul(log_a, log_b):
@@ -82,7 +79,7 @@ def masked_softmax(vec, dim=0):
     exps = torch.exp(vec)
     masked_exps = exps * mask.float()
     masked_sums = masked_exps.sum(dim, keepdim=True)
-    softmax_values = (masked_exps / masked_sums)
+    softmax_values = masked_exps / masked_sums
     return softmax_values
 
 
@@ -92,7 +89,38 @@ def masked_log_softmax(vec, dim=0):
     exps = torch.exp(vec)
     masked_exps = exps * mask.float()
     masked_sums = masked_exps.sum(dim, keepdim=True)
-    softmax_values = (masked_exps / masked_sums)
+    softmax_values = masked_exps / masked_sums
     idx = softmax_values != 0
     softmax_values[idx] = torch.log(softmax_values[idx])
     return softmax_values
+
+
+def get_mask_from_len(lengths, device="cpu", out_tensor=None):
+    max_len = torch.max(lengths).item()
+    ids = (
+        torch.arange(0, max_len, device=device)
+        if out_tensor is None
+        else torch.arange(0, max_len, out=out_tensor)
+    )
+    mask = ids < lengths.unsqueeze(1)
+    return mask
+
+
+def get_mask_for_last_item(lengths, device="cpu", out_tensor=None):
+    """
+    Returns n-1 mask for the last item in the sequence
+
+    Args:
+        lengths (torch.IntTensor): lengths in a batch
+        device (str, optional): Defaults to "cpu".
+        out_tensor (torch.Tensor, optional): uses the memory of a specific tensor.
+            Defaults to None.
+    """
+    max_len = torch.max(lengths).item()
+    ids = (
+        torch.arange(0, max_len, device=device)
+        if out_tensor is None
+        else torch.arange(0, max_len, out=out_tensor)
+    )
+    mask = ids == lengths.unsqueeze(1) - 1
+    return mask

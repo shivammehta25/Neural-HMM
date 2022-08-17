@@ -356,7 +356,7 @@ class HMM(nn.Module):
 
         # Uncomment the line below if you get nan values because of
         # low precision in half precision training
-        final_log_c = final_log_c.clamp(min=1e-8)
+        # final_log_c = final_log_c.clamp(min=1e-8)
 
         sum_final_log_c = torch.logsumexp(final_log_c, dim=1)
         return sum_final_log_c
