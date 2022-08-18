@@ -1,10 +1,9 @@
-import torch
 from math import sqrt
 
-from torch import nn
-
+import torch
 from src.model.Encoder import Encoder
 from src.model.HMM import HMM
+from torch import nn
 
 
 class NeuralHMM(nn.Module):
@@ -62,7 +61,7 @@ class NeuralHMM(nn.Module):
         Args:
             text_inputs (int tensor) : shape: (1, x) where x is length of phoneme input
         Returns:
-            mel_outputs (list): list of len of the output of mel spectrogram each 
+            mel_outputs (list): list of len of the output of mel spectrogram each
                     containing n_mel_channels channels
                 shape: (len, n_mel_channels)
             states_travelled (list): list of phoneme travelled at each time step t
@@ -91,7 +90,7 @@ class NeuralHMM(nn.Module):
             text_lengths (int tensor):  single value scalar with length of input (x)
 
         Returns:
-            mel_outputs (list): list of len of the output of mel spectrogram 
+            mel_outputs (list): list of len of the output of mel spectrogram
                     each containing n_mel_channels channels
                 shape: (len, n_mel_channels)
             states_travelled (list): list of phoneme travelled at each time step t

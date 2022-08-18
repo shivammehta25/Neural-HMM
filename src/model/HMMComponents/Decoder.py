@@ -180,3 +180,4 @@ class Decoder(nn.Module):
         std = torch.clamp(std, min=self.hparams.variance_floor)
         if torch.any(original_tensor != std):
             print("Variance Floored")
+        return std
