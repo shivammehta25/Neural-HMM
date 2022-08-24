@@ -7,7 +7,7 @@ import torch
 
 
 def log_clamped(x, eps=1e-04):
-    clamped_x = torch.clamp(x, min=eps, max=1.0 - eps)
+    clamped_x = torch.clamp(x, min=eps)
     return torch.log(clamped_x)
 
 
@@ -74,7 +74,7 @@ def log_domain_matmul(log_a, log_b):
 
 
 def masked_softmax(vec, dim=0):
-    r""" Outputs masked softmax """
+    r"""Outputs masked softmax"""
     mask = ~torch.eq(vec, 0)
     exps = torch.exp(vec)
     masked_exps = exps * mask.float()
@@ -84,7 +84,7 @@ def masked_softmax(vec, dim=0):
 
 
 def masked_log_softmax(vec, dim=0):
-    r""" Outputs masked log_softmax """
+    r"""Outputs masked log_softmax"""
     mask = ~torch.eq(vec, 0)
     exps = torch.exp(vec)
     masked_exps = exps * mask.float()
