@@ -1,7 +1,7 @@
 import pytest
 import torch
-from src.hparams import create_hparams
 
+from src.hparams import create_hparams
 from src.utilities.data import TextMelCollate
 from tests.test_utilities import get_a_text_mel_pair
 
@@ -25,20 +25,14 @@ def dummy_data_uncollated(test_batch_size):
 
 @pytest.fixture
 def dummy_data(dummy_data_uncollated, hparams):
-    (
-        text_padded,
-        input_lengths,
-        mel_padded,
-        gate_padded,
-        output_lengths,
-    ) = TextMelCollate(hparams.n_frames_per_step)(dummy_data_uncollated)
+    (text_padded, input_lengths, mel_padded, gate_padded, output_lengths,) = TextMelCollate(
+        hparams.n_frames_per_step
+    )(dummy_data_uncollated)
     return text_padded, input_lengths, mel_padded, gate_padded, output_lengths
 
 
 @pytest.fixture
 def dummy_embedded_data(dummy_data, hparams):
     text_padded, input_lengths, mel_padded, gate_padded, output_lengths = dummy_data
-    embedded_input = torch.nn.Embedding(
-        hparams.n_symbols, hparams.symbols_embedding_dim
-    )(text_padded)
+    embedded_input = torch.nn.Embedding(hparams.n_symbols, hparams.symbols_embedding_dim)(text_padded)
     return (embedded_input, input_lengths, mel_padded, gate_padded, output_lengths)

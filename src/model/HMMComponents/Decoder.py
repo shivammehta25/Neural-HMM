@@ -1,11 +1,9 @@
-"""
-Parameter Model
-This model takes state as an input and generates its parameters
-i.e mean, standard deviation and the probability of transition to the next state
-"""
+"""Parameter Model This model takes state as an input and generates its parameters i.e mean, standard deviation and
+the probability of transition to the next state."""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from src.model.layers import LinearReluInitNorm
 from src.utilities.functions import inverse_sigmod, inverse_softplus
 
@@ -37,25 +35,18 @@ class ParameterModel(nn.Module):
             init_mean (float): flat start mean
             init_std (float): flat start std between 0 and 1
         """
-        super(ParameterModel, self).__init__()
+        super().__init__()
 
         self.output_size = output_size
 
         self.layers = nn.ModuleList(
-            [
-                LinearReluInitNorm(inp, out)
-                for inp, out in zip(
-                    [input_size] + parameternetwork[:-1], parameternetwork
-                )
-            ]
+            [LinearReluInitNorm(inp, out) for inp, out in zip([input_size] + parameternetwork[:-1], parameternetwork)]
         )
         last_layer = nn.Linear(parameternetwork[-1], output_size)
         last_layer.weight.data.zero_()
         last_layer.bias.data[0:step_size] = init_mean
         last_layer.bias.data[step_size : 2 * step_size] = inverse_softplus(init_std)
-        last_layer.bias.data[2 * step_size :] = inverse_sigmod(
-            init_transition_probability
-        )
+        last_layer.bias.data[2 * step_size :] = inverse_sigmod(init_transition_probability)
         self.layers.append(last_layer)
 
     def forward(self, x):
@@ -92,7 +83,7 @@ class Decoder(nn.Module):
         Args:
             hparams (argparse.Namespace): hyperparameters
         """
-        super(Decoder, self).__init__()
+        super().__init__()
         self.hparams = hparams
 
         input_size = hparams.post_prenet_rnn_dim + hparams.encoder_embedding_dim
@@ -111,8 +102,7 @@ class Decoder(nn.Module):
         )
 
     def validate_parameters(self):
-        """
-        Validate the hyperparameters
+        """Validate the hyperparameters.
 
         Raises:
             ValueError: when the parameters network is not defined
@@ -157,9 +147,7 @@ class Decoder(nn.Module):
 
         mean, std, transition_vector = (
             ar_mel_inputs[:, :, 0 : self.hparams.n_mel_channels],
-            ar_mel_inputs[
-                :, :, self.hparams.n_mel_channels : 2 * self.hparams.n_mel_channels
-            ],
+            ar_mel_inputs[:, :, self.hparams.n_mel_channels : 2 * self.hparams.n_mel_channels],
             ar_mel_inputs[:, :, 2 * self.hparams.n_mel_channels :].squeeze(2),
         )
         std = F.softplus(std)

@@ -10,7 +10,7 @@ class EmissionModel(nn.Module):
     """
 
     def __init__(self):
-        super(EmissionModel, self).__init__()
+        super().__init__()
         self.distribution_function = tdist.normal.Normal
 
     def sample(self, means, stds):
@@ -52,8 +52,7 @@ class EmissionModel(nn.Module):
 
         mask_tensor = x_t.new_zeros(T_max)
         state_lengths_mask = (
-            torch.arange(T_max, out=mask_tensor).expand(len(state_lengths), T_max)
-            < (state_lengths).unsqueeze(1)
+            torch.arange(T_max, out=mask_tensor).expand(len(state_lengths), T_max) < (state_lengths).unsqueeze(1)
         ).unsqueeze(2)
 
         out = torch.sum(out * state_lengths_mask, dim=2)

@@ -1,5 +1,4 @@
-"""
-functions.py
+"""functions.py.
 
 File for custom utility functions to improve numerical precision
 """
@@ -97,18 +96,13 @@ def masked_log_softmax(vec, dim=0):
 
 def get_mask_from_len(lengths, device="cpu", out_tensor=None):
     max_len = torch.max(lengths).item()
-    ids = (
-        torch.arange(0, max_len, device=device)
-        if out_tensor is None
-        else torch.arange(0, max_len, out=out_tensor)
-    )
+    ids = torch.arange(0, max_len, device=device) if out_tensor is None else torch.arange(0, max_len, out=out_tensor)
     mask = ids < lengths.unsqueeze(1)
     return mask
 
 
 def get_mask_for_last_item(lengths, device="cpu", out_tensor=None):
-    """
-    Returns n-1 mask for the last item in the sequence
+    """Returns n-1 mask for the last item in the sequence.
 
     Args:
         lengths (torch.IntTensor): lengths in a batch
@@ -117,10 +111,6 @@ def get_mask_for_last_item(lengths, device="cpu", out_tensor=None):
             Defaults to None.
     """
     max_len = torch.max(lengths).item()
-    ids = (
-        torch.arange(0, max_len, device=device)
-        if out_tensor is None
-        else torch.arange(0, max_len, out=out_tensor)
-    )
+    ids = torch.arange(0, max_len, device=device) if out_tensor is None else torch.arange(0, max_len, out=out_tensor)
     mask = ids == lengths.unsqueeze(1) - 1
     return mask

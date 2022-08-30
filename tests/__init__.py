@@ -12,5 +12,6 @@ ROOT_SEED = 1234
 _MARK_REQUIRE_GPU = dict(condition=not torch.cuda.is_available(), reason="test requires GPU machine")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def reset_seed():
     seed_everything()

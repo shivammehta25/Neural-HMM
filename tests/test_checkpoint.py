@@ -1,5 +1,6 @@
 import pytest
 import pytorch_lightning as pl
+
 from src.training_module import TrainingModule
 
 

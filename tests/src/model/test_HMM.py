@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from src.model.HMM import HMM
 from src.utilities.functions import (
     get_mask_for_last_item,
@@ -30,9 +31,7 @@ def test_hmm_forward(hparams, dummy_embedded_data, test_batch_size):
         mel_padded.shape[2],
         model.N,
     )
-    assert (not torch.isnan(model.transition_vector).any()) and (
-        not torch.isinf(model.transition_vector).any()
-    )
+    assert (not torch.isnan(model.transition_vector).any()) and (not torch.isinf(model.transition_vector).any())
 
 
 def test_mask_lengths(hparams, dummy_embedded_data, test_batch_size):
@@ -55,10 +54,7 @@ def test_mask_lengths(hparams, dummy_embedded_data, test_batch_size):
     # TODO: remove the input_lengths[i] from the assertion
     #       but then we have avoid masking with -inf
     for i in range(test_batch_size):
-        assert (
-            model.log_alpha_scaled[i, output_lengths[i] :, : input_lengths[i]].sum()
-            == 0.0
-        ), "Not masked properly"
+        assert model.log_alpha_scaled[i, output_lengths[i] :, : input_lengths[i]].sum() == 0.0, "Not masked properly"
 
 
 def test_init_lstm_states(hparams, dummy_embedded_data, test_batch_size):
@@ -70,9 +66,7 @@ def test_init_lstm_states(hparams, dummy_embedded_data, test_batch_size):
         _,
         output_lengths,
     ) = dummy_embedded_data
-    h_post_prenet, c_post_prenet = model.init_lstm_states(
-        test_batch_size, hparams.post_prenet_rnn_dim, mel_padded
-    )
+    h_post_prenet, c_post_prenet = model.init_lstm_states(test_batch_size, hparams.post_prenet_rnn_dim, mel_padded)
     assert h_post_prenet.shape == (test_batch_size, hparams.post_prenet_rnn_dim)
     assert c_post_prenet.shape == (test_batch_size, hparams.post_prenet_rnn_dim)
 
@@ -98,9 +92,7 @@ def test_process_ar_timestep(
         output_lengths,
     ) = dummy_embedded_data
     mel_padded = mel_padded.transpose(1, 2)
-    h_post_prenet, c_post_prenet = model.init_lstm_states(
-        test_batch_size, hparams.post_prenet_rnn_dim, mel_padded
-    )
+    h_post_prenet, c_post_prenet = model.init_lstm_states(test_batch_size, hparams.post_prenet_rnn_dim, mel_padded)
 
     h_post_prenet, c_post_prenet = model.process_ar_timestep(
         t,
@@ -152,9 +144,7 @@ def test_forward_algorithm_variables(hparams, dummy_embedded_data, test_batch_si
 
 
 @pytest.mark.parametrize("dropout_flag", [True, False])
-def test_perform_data_dropout_of_ar_mel_inputs(
-    hparams, dummy_embedded_data, dropout_flag
-):
+def test_perform_data_dropout_of_ar_mel_inputs(hparams, dummy_embedded_data, dropout_flag):
     hparams.data_dropout_while_eval = dropout_flag
     hparams.data_dropout = 0.5
     model = HMM(hparams)
@@ -174,9 +164,7 @@ def test_perform_data_dropout_of_ar_mel_inputs(
         assert not (mel_padded.sum(2).masked_select(mask) == 0).any()
 
 
-def test_get_absorption_state_scaling_factor(
-    hparams, dummy_embedded_data, test_batch_size
-):
+def test_get_absorption_state_scaling_factor(hparams, dummy_embedded_data, test_batch_size):
     model = HMM(hparams)
     (
         embedded_input,
@@ -190,9 +178,7 @@ def test_get_absorption_state_scaling_factor(
     _ = model.initialize_forward_algorithm_variables(mel_padded)
     model.log_alpha_scaled = torch.rand_like(model.log_alpha_scaled).clamp(1e-3)
     model.transition_vector = torch.randn_like(model.transition_vector).sigmoid().log()
-    sum_final_log_c = model.get_absorption_state_scaling_factor(
-        output_lengths, model.log_alpha_scaled, input_lengths
-    )
+    sum_final_log_c = model.get_absorption_state_scaling_factor(output_lengths, model.log_alpha_scaled, input_lengths)
 
     text_mask = ~get_mask_from_len(input_lengths, input_lengths.device)
     transition_prob_mask = ~get_mask_for_last_item(input_lengths, input_lengths.device)
@@ -200,9 +186,9 @@ def test_get_absorption_state_scaling_factor(
     outputs = []
 
     for i in range(test_batch_size):
-        last_log_alpha_scaled = model.log_alpha_scaled[
-            i, output_lengths[i] - 1
-        ].masked_fill(text_mask[i], -float("inf"))
+        last_log_alpha_scaled = model.log_alpha_scaled[i, output_lengths[i] - 1].masked_fill(
+            text_mask[i], -float("inf")
+        )
         log_last_transition_probability = log_clamped(
             torch.sigmoid(model.transition_vector[i, output_lengths[i] - 1])
         ).masked_fill(transition_prob_mask[i], -float("inf"))
@@ -224,9 +210,7 @@ def test_sample(hparams, dummy_embedded_data, test_batch_size):
         output_lengths,
     ) = dummy_embedded_data
 
-    (mel_output, states_travelled, input_parameters, output_parameters) = model.sample(
-        embedded_input[0:1]
-    )
+    (mel_output, states_travelled, input_parameters, output_parameters) = model.sample(embedded_input[0:1])
     assert len(mel_output[0]) == hparams.n_mel_channels
     assert input_parameters[0][0].shape[-1] == hparams.n_mel_channels
     assert output_parameters[0][0].shape[-1] == hparams.n_mel_channels

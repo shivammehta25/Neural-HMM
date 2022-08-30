@@ -1,6 +1,7 @@
-from src.model.layers import LinearReluInitNorm
 from torch import nn
 from torch.nn import functional as F
+
+from src.model.layers import LinearReluInitNorm
 
 
 class Prenet(nn.Module):
@@ -9,7 +10,7 @@ class Prenet(nn.Module):
     """
 
     def __init__(self, in_dim, n_layers, prenet_dim, prenet_dropout):
-        super(Prenet, self).__init__()
+        super().__init__()
         in_sizes = [in_dim] + [prenet_dim for _ in range(n_layers)]
         self.prenet_dropout = prenet_dropout
         self.layers = nn.ModuleList(

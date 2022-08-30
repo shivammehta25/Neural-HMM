@@ -9,9 +9,10 @@ import numpy as np
 import torch
 from nltk import word_tokenize
 from scipy.io.wavfile import read
+from torch.utils.data.dataset import Dataset
+
 from src.model.layers import TacotronSTFT
 from src.utilities.text import phonetise_text, text_to_sequence
-from torch.utils.data.dataset import Dataset
 
 
 def load_wav_to_torch(full_path):
@@ -34,7 +35,7 @@ def load_filepaths_and_text(filename, split="|"):
 
 
 class TextMelCollate:
-    r""" 
+    r"""
     Zero-pads model inputs and targets based on number of frames per setep
     """
 
@@ -62,7 +63,7 @@ class TextMelCollate:
 
         # Right zero-pad mel-spec
         num_mels = batch[0][1].size(0)
-        max_target_len = max([x[1].size(1) for x in batch])
+        max_target_len = max(x[1].size(1) for x in batch)
 
         # include mel padded
         mel_padded = torch.FloatTensor(len(batch), num_mels, max_target_len)
@@ -80,11 +81,11 @@ class TextMelCollate:
 
 class TextMelLoader(Dataset):
     r"""
-        Taken from Nvidia-Tacotron-2 implementation
+    Taken from Nvidia-Tacotron-2 implementation
 
-        1) loads audio,text pairs
-        2) normalizes text and converts them to sequences of one-hot vectors
-        3) computes mel-spectrograms from audio files.
+    1) loads audio,text pairs
+    2) normalizes text and converts them to sequences of one-hot vectors
+    3) computes mel-spectrograms from audio files.
     """
 
     def __init__(self, audiopaths_and_text, hparams, transform=None):
@@ -141,11 +142,7 @@ class TextMelLoader(Dataset):
         if not self.load_mel_from_disk:
             audio, sampling_rate = load_wav_to_torch(filename)
             if sampling_rate != self.stft.sampling_rate:
-                raise ValueError(
-                    "{} SR doesn't match target {} SR".format(
-                        sampling_rate, self.stft.sampling_rate
-                    )
-                )
+                raise ValueError(f"{sampling_rate} SR doesn't match target {self.stft.sampling_rate} SR")
             audio_norm = audio / self.max_wav_value
             audio_norm = audio_norm.unsqueeze(0)
             audio_norm = torch.autograd.Variable(audio_norm, requires_grad=False)
@@ -153,9 +150,7 @@ class TextMelLoader(Dataset):
             melspec = torch.squeeze(melspec, 0)
         else:
             melspec = torch.from_numpy(np.load(filename))
-            assert (
-                melspec.size(0) == self.stft.n_mel_channels
-            ), "Mel dimension mismatch: given {}, expected {}".format(
+            assert melspec.size(0) == self.stft.n_mel_channels, "Mel dimension mismatch: given {}, expected {}".format(
                 melspec.size(0), self.stft.n_mel_channels
             )
 
@@ -186,7 +181,7 @@ class Normalise:
     """
 
     def __init__(self, mean, std):
-        super(Normalise, self).__init__()
+        super().__init__()
 
         if not torch.is_tensor(mean):
             mean = torch.tensor(mean)

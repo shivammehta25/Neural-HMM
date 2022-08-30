@@ -1,11 +1,11 @@
-"""
-Transition Model
+"""Transition Model.
 
-This network is responsible for the models response of whether to switch to next state
-or keep emitting at the current state.
+This network is responsible for the models response of whether to switch to next state or keep emitting at the current
+state.
 """
 import torch
 import torch.nn as nn
+
 from src.utilities.functions import log_clamped, logsumexp
 
 
@@ -16,7 +16,7 @@ class TransitionModel(nn.Module):
     """
 
     def __init__(self):
-        super(TransitionModel, self).__init__()
+        super().__init__()
 
     def set_staying_and_transitioning_probability(self, staying, transitioning):
         r"""
@@ -38,7 +38,7 @@ class TransitionModel(nn.Module):
                 shape: (N)
             state_lengths (int tensor): Lengths of states in a batch
                 shape: (batch)
-                
+
         Returns:
             out (torch.FloatTensor): log probability of transitioning to each state
         """
@@ -47,9 +47,7 @@ class TransitionModel(nn.Module):
         transition_probability = torch.sigmoid(transition_vector)
         staying_probability = torch.sigmoid(-transition_vector)
 
-        self.set_staying_and_transitioning_probability(
-            staying_probability, transition_probability
-        )
+        self.set_staying_and_transitioning_probability(staying_probability, transition_probability)
 
         log_staying_probability = log_clamped(staying_probability)
         log_transition_probability = log_clamped(transition_probability)
@@ -61,8 +59,7 @@ class TransitionModel(nn.Module):
 
         mask_tensor = log_alpha_scaled.new_zeros(T_max)
         not_state_lengths_mask = ~(
-            torch.arange(T_max, out=mask_tensor).expand(len(state_lengths), T_max)
-            < (state_lengths).unsqueeze(1)
+            torch.arange(T_max, out=mask_tensor).expand(len(state_lengths), T_max) < (state_lengths).unsqueeze(1)
         )
 
         out = logsumexp(torch.stack((staying, leaving), dim=2), dim=2)

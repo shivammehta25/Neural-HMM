@@ -1,4 +1,5 @@
 import torch
+
 from src.model.HMMComponents.TransitionModel import TransitionModel
 
 

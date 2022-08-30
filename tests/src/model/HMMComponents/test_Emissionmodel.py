@@ -1,6 +1,7 @@
 import pytest
 import torch
-from src.model.HMMComponents import EmissionModel
+
+from src.model.HMMComponents.EmissionModel import EmissionModel
 
 
 @pytest.mark.parametrize("n_mel_channels", [80, 4])

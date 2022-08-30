@@ -1,6 +1,7 @@
 import pytest
 import torch
-from src.model.HMMComponents import Decoder, ParameterModel
+
+from src.model.HMMComponents.Decoder import Decoder, ParameterModel
 from src.utilities.functions import inverse_sigmod, inverse_softplus
 
 
@@ -32,9 +33,7 @@ def test_parameter_model_flat_start(
     output = model(test_data)
     assert (output[:, 0:step_size] == init_mean).all()
     assert (output[:, step_size : 2 * step_size] == inverse_softplus(init_std)).all()
-    assert (
-        output[:, 2 * step_size :] == inverse_sigmod(init_transition_probability)
-    ).all()
+    assert (output[:, 2 * step_size :] == inverse_sigmod(init_transition_probability)).all()
 
 
 @pytest.mark.parametrize(

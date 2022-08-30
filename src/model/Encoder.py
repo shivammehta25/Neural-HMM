@@ -6,12 +6,13 @@ from src.model.layers import ConvNorm
 
 class Encoder(nn.Module):
     """Encoder module:
-        - Three 1-d convolution banks
-        - Bidirectional LSTM
+
+    - Three 1-d convolution banks
+    - Bidirectional LSTM
     """
 
     def __init__(self, hparams):
-        super(Encoder, self).__init__()
+        super().__init__()
 
         self.encoder_embedding_dim = hparams.encoder_embedding_dim
         self.state_per_phone = hparams.state_per_phone
@@ -71,9 +72,7 @@ class Encoder(nn.Module):
 
         outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
 
-        outputs = outputs.reshape(
-            batch_size, t_len * self.state_per_phone, self.encoder_embedding_dim
-        )
+        outputs = outputs.reshape(batch_size, t_len * self.state_per_phone, self.encoder_embedding_dim)
         input_lengths = input_lengths * self.state_per_phone
 
         return outputs, input_lengths  # (32, 139, 519)

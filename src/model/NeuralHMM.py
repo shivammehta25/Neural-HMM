@@ -1,14 +1,15 @@
 from math import sqrt
 
 import torch
+from torch import nn
+
 from src.model.Encoder import Encoder
 from src.model.HMM import HMM
-from torch import nn
 
 
 class NeuralHMM(nn.Module):
     def __init__(self, hparams):
-        super(NeuralHMM, self).__init__()
+        super().__init__()
         self.n_mel_channels = hparams.n_mel_channels
         self.n_frames_per_step = hparams.n_frames_per_step
         self.embedding = nn.Embedding(hparams.n_symbols, hparams.symbols_embedding_dim)

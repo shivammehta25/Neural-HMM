@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from src.model.Prenet import Prenet
 
 
@@ -9,7 +10,13 @@ from src.model.Prenet import Prenet
 )
 def test_Prenet(dummy_data, in_dim, n_layers, prenet_dim, prenet_dropout, dropout_flag):
     model = Prenet(in_dim, n_layers, prenet_dim, prenet_dropout)
-    (text_padded, input_lengths, mel_padded, gate_padded, output_lengths,) = dummy_data
+    (
+        text_padded,
+        input_lengths,
+        mel_padded,
+        gate_padded,
+        output_lengths,
+    ) = dummy_data
 
     prenet_output = model(torch.randn(1, in_dim), dropout_flag)
 
