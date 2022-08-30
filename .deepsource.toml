@@ -1,5 +1,7 @@
 version = 1
 
+test_patterns = ["tests/**"]
+
 [[analyzers]]
 name = "shell"
 enabled = true
@@ -10,3 +12,4 @@ enabled = true
 
   [analyzers.meta]
   runtime_version = "3.x.x"
+  max_line_length = 120

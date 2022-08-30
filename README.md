@@ -26,13 +26,13 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 
 ## Setup and training using LJ Speech
 1. Download and extract the [LJ Speech dataset][ljspeech_link]. Place it in the `data` folder such that the directory becomes `data/LJSpeech-1.1`. Otherwise update the filelists in `data/filelists` accordingly.
-2. Clone this repository ```git clone https://github.com/shivammehta007/Neural-HMM.git``` 
-   * If using single GPU checkout the branch ```gradient_checkpointing``` it will help to fit bigger batch size during training. 
+2. Clone this repository ```git clone https://github.com/shivammehta007/Neural-HMM.git```
+   * If using single GPU checkout the branch ```gradient_checkpointing``` it will help to fit bigger batch size during training.
    * Use `git clone --single-branch -b gradient_checkpointing https://github.com/shivammehta007/Neural-HMM.git` for that.
 3. Initalise the submodules ```git submodule init; git submodule update```
 4. Make sure you have [docker installed][docker_install_link] and running.
     * It is recommended to use Docker (it manages the CUDA runtime libraries and Python dependencies itself specified in Dockerfile)
-    * Alternatively, If you do not intend to use Docker, you can use pip to install the dependencies using ```pip install -r requirements.txt``` 
+    * Alternatively, If you do not intend to use Docker, you can use pip to install the dependencies using ```pip install -r requirements.txt```
 5. Run ``bash start.sh`` and it will install all the dependencies and run the container.
 6. Check `src/hparams.py` for hyperparameters and set GPUs.
     1. For multi-GPU training, set GPUs to ```[0, 1 ..]```
@@ -45,10 +45,10 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 9. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
 
 ## Synthesis
-1. Download our [pre-trained LJ Speech model][pretrained_model_link]. 
+1. Download our [pre-trained LJ Speech model][pretrained_model_link].
 (This is the exact same model as system NH2 in the paper, but with training continued until reaching 200k updates total.)
 2. Download HiFi gan pretrained [HiFiGAN model][hifigan_all].
-    - We recommend using [fine tuned][hifigan_t2] on Tacotron2 if you cannot finetune on NeuralHMM. 
+    - We recommend using [fine tuned][hifigan_t2] on Tacotron2 if you cannot finetune on NeuralHMM.
 3. Run jupyter notebook and open ```synthesis.ipynb```.
 
 
@@ -62,12 +62,12 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 ### Known issues/warnings
 
 #### PyTorch dataloader
-* If you encounter this error message ```[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)```, this is a known issue in [PyTorch Dataloader][pytorch_dataloader_issue_link]. 
+* If you encounter this error message ```[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)```, this is a known issue in [PyTorch Dataloader][pytorch_dataloader_issue_link].
 * It will be fixed when PyTorch releases a new Docker container image with updated version of Torch. If you are not using docker this can be removed with ```torch > 1.9.1```
 
 #### Torchmetric error on RTX 3090
 * If you encoder this error message ```ImportError: cannot import name 'get_num_classes' from 'torchmetrics.utilities.data' (/opt/conda/lib/python3.8/site-packages/torchmetrics/utilities/data.py)```
-* Update the requirement.txt file with these requirements: 
+* Update the requirement.txt file with these requirements:
 ```python
 torch==1.11.0a0+b6df043
 --extra-index-url https://download.pytorch.org/whl/cu113
