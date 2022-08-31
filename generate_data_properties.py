@@ -31,8 +31,7 @@ def parse_batch(batch):
     Args:
         batch: batch of data
     """
-    text_padded, input_lengths, mel_padded, gate_padded, \
-        output_lengths = batch
+    text_padded, input_lengths, mel_padded, gate_padded, output_lengths = batch
     text_padded = to_gpu(text_padded).long()
     input_lengths = to_gpu(input_lengths).long()
     max_len = torch.max(input_lengths.data).item()
@@ -42,7 +41,8 @@ def parse_batch(batch):
 
     return (
         (text_padded, input_lengths, mel_padded, max_len, output_lengths),
-        (mel_padded, gate_padded))
+        (mel_padded, gate_padded),
+    )
 
 
 def get_data_parameters_for_flat_start(train_loader, hparams):
@@ -68,16 +68,17 @@ def get_data_parameters_for_flat_start(train_loader, hparams):
     total_mel_sq_sum = torch.zeros(1).cuda().type(torch.double)
 
     # For go token
-    sum_first_observation = torch.zeros(
-        hparams.n_mel_channels).cuda().type(torch.double)
+    sum_first_observation = torch.zeros(hparams.n_mel_channels).cuda().type(torch.double)
 
     print("For exact calculation we would do it with two loops")
     print("We first get the mean:")
     start = time.perf_counter()
 
     for i, batch in enumerate(tqdm(train_loader)):
-        (text_inputs, text_lengths, mels, max_len,
-         mel_lengths), (_, gate_padded) = parse_batch(batch)
+        (text_inputs, text_lengths, mels, max_len, mel_lengths), (
+            _,
+            gate_padded,
+        ) = parse_batch(batch)
 
         total_state_len += torch.sum(text_lengths)
         total_mel_len += torch.sum(mel_lengths)
@@ -88,8 +89,7 @@ def get_data_parameters_for_flat_start(train_loader, hparams):
         sum_first_observation += torch.sum(mels[:, :, 0], dim=0)
 
     data_mean = total_mel_sum / (total_mel_len * hparams.n_mel_channels)
-    data_std = torch.sqrt((total_mel_sq_sum / (total_mel_len *
-                          hparams.n_mel_channels)) - torch.pow(data_mean, 2))
+    data_std = torch.sqrt((total_mel_sq_sum / (total_mel_len * hparams.n_mel_channels)) - torch.pow(data_mean, 2))
 
     N_mean = total_state_len / len(train_loader.dataset)
 
@@ -107,21 +107,28 @@ def get_data_parameters_for_flat_start(train_loader, hparams):
     start = time.perf_counter()
 
     for i, batch in enumerate(tqdm(train_loader)):
-        (text_inputs, text_lengths, mels, max_len,
-         mel_lengths), (_, gate_padded) = parse_batch(batch)
+        (text_inputs, text_lengths, mels, max_len, mel_lengths), (
+            _,
+            gate_padded,
+        ) = parse_batch(batch)
         x_minus_mean_square = (mels - data_mean).pow(2)
         T_max_batch = torch.max(mel_lengths)
 
         mask_tensor = mels.new_zeros(T_max_batch)
-        mask = (torch.arange(float(T_max_batch), out=mask_tensor).expand(len(mel_lengths), T_max_batch) < (mel_lengths).unsqueeze(
-            1)).unsqueeze(1).expand(len(mel_lengths), hparams.n_mel_channels, T_max_batch)
+        mask = (
+            (
+                torch.arange(float(T_max_batch), out=mask_tensor).expand(len(mel_lengths), T_max_batch)
+                < (mel_lengths).unsqueeze(1)
+            )
+            .unsqueeze(1)
+            .expand(len(mel_lengths), hparams.n_mel_channels, T_max_batch)
+        )
 
         x_minus_mean_square *= mask
 
         sum_of_squared_error_data += torch.sum(x_minus_mean_square)
 
-    std = torch.sqrt(sum_of_squared_error_data /
-                     (total_mel_len * hparams.n_mel_channels))
+    std = torch.sqrt(sum_of_squared_error_data / (total_mel_len * hparams.n_mel_channels))
 
     print("Total Processing Time:", time.perf_counter() - start)
 
@@ -141,35 +148,67 @@ def main(args):
     trainset = TextMelLoader(hparams.training_files, hparams)
     collate_fn = TextMelCollate(hparams.n_frames_per_step)
 
-    train_loader = DataLoader(trainset, batch_size=hparams.batch_size, num_workers=hparams.num_workers, pin_memory=False,
-                              collate_fn=collate_fn)
+    train_loader = DataLoader(
+        trainset,
+        batch_size=hparams.batch_size,
+        num_workers=hparams.num_workers,
+        pin_memory=False,
+        collate_fn=collate_fn,
+    )
 
-    data_mean, data_std, go_token_init_value, init_transition_prob = get_data_parameters_for_flat_start(
-        train_loader, hparams)
+    (
+        data_mean,
+        data_std,
+        go_token_init_value,
+        init_transition_prob,
+    ) = get_data_parameters_for_flat_start(train_loader, hparams)
 
-    print({
-        "data_mean": data_mean.item(),
-        "data_std": data_std.item(),
-        "init_transition_prob": init_transition_prob.item(),
-        "go_token_init_value": go_token_init_value
-    })
+    print(
+        {
+            "data_mean": data_mean.item(),
+            "data_std": data_std.item(),
+            "init_transition_prob": init_transition_prob.item(),
+            "go_token_init_value": go_token_init_value,
+        }
+    )
 
-    torch.save({
-        "data_mean": data_mean,
-        "data_std": data_std,
-        "init_transition_prob": init_transition_prob,
-        "go_token_init_value": go_token_init_value
-    }, args.output_file)
+    torch.save(
+        {
+            "data_mean": data_mean,
+            "data_std": data_std,
+            "init_transition_prob": init_transition_prob,
+            "go_token_init_value": go_token_init_value,
+        },
+        args.output_file,
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--output-file', type=str, default="data_parameters.pt",
-                        required=False, help='checkpoint path')
-    parser.add_argument('-b', '--batch-size', type=int, default=256,
-                        required=False, help='batch size to fetch data properties')
-    parser.add_argument('-f', '--force', action='store_true',
-                        default=False, required=False, help='force overwrite the file')
+    parser.add_argument(
+        "-o",
+        "--output-file",
+        type=str,
+        default="data_parameters.pt",
+        required=False,
+        help="checkpoint path",
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        default=256,
+        required=False,
+        help="batch size to fetch data properties",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        required=False,
+        help="force overwrite the file",
+    )
     args = parser.parse_args()
 
     if os.path.exists(args.output_file) and not args.force:

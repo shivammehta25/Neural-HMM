@@ -1,23 +1,20 @@
 r"""
-training_model.py 
+training_model.py
 
-This file contains PyTorch Lightning's main module where code of the main model is implemented
+This file contains PyTorch Lightning's main module where code
+of the main model is implemented
 """
 import os
 from argparse import Namespace
-from typing import Any, List, Tuple
 
 import pytorch_lightning as pl
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 from src.model.NeuralHMM import NeuralHMM
 from src.validation_plotting import log_validation
 
 
 class TrainingModule(pl.LightningModule):
-
     def __init__(self, hparams):
         super().__init__()
         if type(hparams) != Namespace:
@@ -46,10 +43,13 @@ class TrainingModule(pl.LightningModule):
         Configure optimizer
 
         Returns:
-            (torch.optim.Optimizer) 
+            (torch.optim.Optimizer)
         """
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate,
-                                weight_decay=self.hparams.weight_decay)
+        return torch.optim.Adam(
+            self.parameters(),
+            lr=self.hparams.learning_rate,
+            weight_decay=self.hparams.weight_decay,
+        )
 
     def training_step(self, train_batch, batch_idx):
         r"""
@@ -65,10 +65,22 @@ class TrainingModule(pl.LightningModule):
         x, y = self.model.parse_batch(train_batch)
         log_probs = self(x)
         loss = -log_probs.mean()
-        self.log("loss/train", loss.item(), prog_bar=True,
-                 on_step=True, sync_dist=True, logger=True)
-        self.log("Global_Step", int(self.global_step),
-                 prog_bar=True, on_step=True, sync_dist=True, logger=False)
+        self.log(
+            "loss/train",
+            loss.item(),
+            prog_bar=True,
+            on_step=True,
+            sync_dist=True,
+            logger=True,
+        )
+        self.log(
+            "Global_Step",
+            int(self.global_step),
+            prog_bar=True,
+            on_step=True,
+            sync_dist=True,
+            logger=False,
+        )
         return loss
 
     def validation_step(self, val_batch, batch_idx):
@@ -82,35 +94,61 @@ class TrainingModule(pl.LightningModule):
         x, y = self.model.parse_batch(val_batch)
         log_probs = self(x)
         loss = -log_probs.mean()
-        self.log('loss/val', loss.item(), prog_bar=True,
-                 sync_dist=True, logger=True)
+        self.log("loss/val", loss.item(), prog_bar=True, sync_dist=True, logger=True)
         return loss
 
     def on_before_zero_grad(self, optimizer):
         r"""
         Takes actions before zeroing the gradients.
-        We use it to plot the output of the model at the save_model_checkpoint iteration from hparams.
+        We use it to plot the output of the model at
+        the save_model_checkpoint iteration from hparams.
 
         Args:
             optimizer ([type]): [description]
         """
 
-        if self.trainer.is_global_zero and (self.global_step % self.hparams.save_model_checkpoint == 0):
-            text_inputs, text_lengths, mels, max_len, mel_lengths = self.get_an_element_of_validation_dataset()
-            mel_output, state_travelled, input_parameters, output_parameters = self.model.sample(text_inputs[0],
-                                                                                                 text_lengths[0])
+        if self.trainer.is_global_zero and (
+            self.global_step % self.hparams.save_model_checkpoint == 0
+        ):
+            (
+                text_inputs,
+                text_lengths,
+                mels,
+                max_len,
+                mel_lengths,
+            ) = self.get_an_element_of_validation_dataset()
+            (
+                mel_output,
+                state_travelled,
+                input_parameters,
+                output_parameters,
+            ) = self.model.sample(text_inputs[0], text_lengths[0])
             mel_output_normalised = self.model.hmm.normaliser(
-                mels.new_tensor(mel_output))
+                mels.new_tensor(mel_output)
+            )
 
             with torch.no_grad():
-                _ = self.model((text_inputs, text_lengths,
-                                mels, max_len, mel_lengths))
+                _ = self.model((text_inputs, text_lengths, mels, max_len, mel_lengths))
 
-            log_validation(self.logger.experiment, self.model, mel_output, mel_output_normalised, state_travelled, mels[0],
-                           input_parameters, output_parameters, self.global_step)
+            log_validation(
+                self.logger.experiment,
+                self.model,
+                mel_output,
+                mel_output_normalised,
+                state_travelled,
+                mels[0],
+                input_parameters,
+                output_parameters,
+                self.global_step,
+            )
 
-            self.trainer.save_checkpoint(os.path.join(
-                self.hparams.checkpoint_dir, self.hparams.run_name, f"checkpoint_{self.global_step}.ckpt"))
+            self.trainer.save_checkpoint(
+                os.path.join(
+                    self.hparams.checkpoint_dir,
+                    self.hparams.run_name,
+                    f"checkpoint_{self.global_step}.ckpt",
+                )
+            )
 
     def get_an_element_of_validation_dataset(self):
         r"""
@@ -130,6 +168,11 @@ class TrainingModule(pl.LightningModule):
         mels = mels[0].unsqueeze(0).to(self.device)
         max_len = torch.max(text_lengths).data
         mel_lengths = mel_lengths[0].unsqueeze(0).to(self.device)
+        # Sometimes in a batch the element which has the maximum mel len
+        # is not the same as the element which has the maximum text len.
+        # This prevent the model to break down when plotting validation.
+        mels = mels[:, :, : mel_lengths.item()]
+
         return text_inputs, text_lengths, mels, max_len, mel_lengths
 
     def inference(self, text_inputs):
@@ -147,5 +190,6 @@ class TrainingModule(pl.LightningModule):
             grad_norm_dict: Dictionary containing current grad norm metrics
 
         """
-        self.log_dict(grad_norm_dict, on_step=True,
-                      on_epoch=True, prog_bar=False, logger=True)
+        self.log_dict(
+            grad_norm_dict, on_step=True, on_epoch=True, prog_bar=False, logger=True
+        )

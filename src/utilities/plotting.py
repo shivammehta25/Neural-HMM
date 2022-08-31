@@ -3,7 +3,7 @@ plotting.py
 
 File contains utilities for plotting
 """
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib
 import matplotlib.pylab as plt
@@ -35,15 +35,14 @@ def validate_numpy_array(value: Any):
     elif torch.is_tensor(value):
         return value.cpu().numpy()
     else:
-        raise TypeError(
-            "Value must be a numpy array, a torch tensor or a list")
+        raise TypeError("Value must be a numpy array, a torch tensor or a list")
 
 
 def save_figure_to_numpy(fig):
     r"""
     Saves the figure to an numpy array
     """
-    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+    data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep="")
     data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     return data
 
@@ -111,8 +110,7 @@ def plot_mel_spectrogram_to_numpy(mel_spectrogram):
     mel_spectrogram = validate_numpy_array(mel_spectrogram)
 
     fig, ax = plt.subplots(figsize=(12, 3))
-    im = ax.imshow(mel_spectrogram, aspect="auto", origin="lower",
-                   interpolation='none')
+    im = ax.imshow(mel_spectrogram, aspect="auto", origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
     plt.xlabel("Frames")
     plt.ylabel("Channels")
@@ -125,8 +123,7 @@ def plot_mel_spectrogram_to_numpy(mel_spectrogram):
 
 
 def plot_transition_probabilities_to_numpy(states, transition_probabilities):
-    """
-    Generates trainsition probabilities plot for the states and the probability of transition
+    """Generates trainsition probabilities plot for the states and the probability of transition.
 
     Args:
         states (torch.IntTensor): the states
@@ -136,7 +133,7 @@ def plot_transition_probabilities_to_numpy(states, transition_probabilities):
     transition_probabilities = validate_numpy_array(transition_probabilities)
 
     fig, ax = plt.subplots(figsize=(30, 3))
-    ax.plot(transition_probabilities, 'o')
+    ax.plot(transition_probabilities, "o")
     ax.set_title("Transition probability of state")
     ax.set_xlabel("hidden state")
     ax.set_ylabel("probability")
@@ -150,8 +147,7 @@ def plot_transition_probabilities_to_numpy(states, transition_probabilities):
 
 
 def plot_go_tokens_to_numpy(go_tokens):
-    """
-    Plots the trainable go token to numpy
+    """Plots the trainable go token to numpy.
 
     Args:
         go_tokens (torch.FloatTensor): go tokens
@@ -168,8 +164,7 @@ def plot_go_tokens_to_numpy(go_tokens):
 
 
 def plot_hidden_states_to_numpy(hidden_states):
-    """
-    Plots the hidden state to numpy
+    """Plots the hidden state to numpy.
 
     Args:
         hidden_states (torch.FloatTensor): hidden states

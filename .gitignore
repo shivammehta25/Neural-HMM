@@ -142,3 +142,6 @@ checkpoints/
 
 # Model default log folder
 tb_logs/
+
+# Synthesised wavs
+synthesised_wavs/

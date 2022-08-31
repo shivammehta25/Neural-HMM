@@ -1,8 +1,8 @@
 # Neural HMMs are all you need (for high-quality attention-free TTS)
-##### [Shivam Mehta][shivam_profile] , [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
+##### [Shivam Mehta][shivam_profile], [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
 
 
-<head> 
+<head>
 <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
@@ -11,7 +11,7 @@
 <meta name="msapplication-TileColor" content="#da532c">
 <meta name="theme-color" content="#ffffff">
 </head>
-<!-- This post presents Neural-HMMs an autoregressive attention-free deep generative model for synthesising high-quality Mel-Spectrogram representations. -->
+<!-- This page presents audio examples of neural TTS using neural hidden Markov models instead of attention, as published at ICASSP 2022. -->
 
 [arxiv_link]: https://arxiv.org/abs/2108.13320
 [github_link]: https://github.com/shivammehta007/Neural-HMM
@@ -19,12 +19,15 @@
 [eva_profile]: https://www.kth.se/profile/szekely
 [jonas_profile]: https://www.kth.se/profile/beskow
 [gustav_profile]: https://people.kth.se/~ghe/
+[HiFi_GAN_LJ_FT_V1_link]: https://github.com/jik876/hifi-gan#pretrained-model
 
 ## Summary
 
-In this paper we show that classic, HMM-based speech synthesis and modern, neural text-to-speech (TTS) can be combined to obtain the best of both worlds. We call this new approach “neural HMM TTS”. The new system we describe:
+We show that classic, HMM-based speech synthesis and modern, neural text-to-speech (TTS) can be combined to obtain the best of both worlds. Concretely, our proposal amounts to replacing conventional attention in neural TTS by so-called neural HMMs. We call this new approach “neural HMM TTS”.
+
+To validate our proposal, we describe a modified version of Tacotron 2 that uses neural HMMs instead of attention. The resulting system:
 * Is smaller and simpler than Tacotron 2
-* Learns to speak and align faster
+* Learns to speak and align much quicker
 * Does not risk breaking down into gibberish
 * Is fully probabilistic
 * Allows easy control over speaking rate
@@ -32,20 +35,21 @@ In this paper we show that classic, HMM-based speech synthesis and modern, neura
 
 To our knowledge, this is the first time HMM-based speech synthesis has achieved a speech quality on par with neural TTS.
 
-For more information, please [read our preprint here][arxiv_link].
+For more information, please [read our ICASSP 2022 paper here][arxiv_link].
 
 ## Architecture
 
-![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of Neural HMM TTS")
+<!-- ![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of neural HMM TTS") -->
+![Synthesising from Neural-HMM](images/model_video.gif "Architecture of neural HMM TTS")
 
+<!-- ## Web Example
+<iframe url="http://130.237.67.68:8501/" height="400" width="100%" title="Web Example"> </iframe> -->
 
 ## Code
 
-Code is available on our [Github repository][github_link].
+Code is available in our [Github repository][github_link], along with a pre-trained model.
 
 ## Listening examples
-
-### Stimuli from listening test
 
 <style type="text/css">
   .tg {
@@ -102,7 +106,7 @@ Code is available on our [Github repository][github_link].
   -webkit-appearance: none;
   width: 75%;
   height: 15px;
-  border-radius: 5px;  
+  border-radius: 5px;
   background: #d3d3d3;
   outline: none;
   opacity: 0.7;
@@ -115,7 +119,7 @@ Code is available on our [Github repository][github_link].
   appearance: none;
   width: 25px;
   height: 25px;
-  border-radius: 50%; 
+  border-radius: 50%;
   background: #409cff;
   cursor: pointer;
 }
@@ -127,8 +131,10 @@ Code is available on our [Github repository][github_link].
   background: #409cff;
   cursor: pointer;
 }
-
 </style>
+
+### Stimuli from listening test
+
 <table class="tg">
   <thead>
     <tr>
@@ -365,20 +371,20 @@ Code is available on our [Github repository][github_link].
   // Functions to update values
   var iterations = {
                      0: ['0.5k', 500],
-                     1: ['1k', 1000],  
-                     2: ['1.5k', 1500], 
-                     3: ['2k', 2000],  
-                     4: ['2.5k', 2500], 
-                     5: ['5k', 5000], 
-                     6: ['7.5k', 7500], 
-                     7: ['10k', 10000], 
-                     8: ['12.5k', 12500], 
-                     9: ['15k', 15000], 
-                     10: ['17.5k', 17500], 
-                     11: ['20k', 20000], 
-                     12: ['22.5k', 22500], 
-                     13: ['25k', 25000], 
-                     14: ['27.5k', 27500], 
+                     1: ['1k', 1000],
+                     2: ['1.5k', 1500],
+                     3: ['2k', 2000],
+                     4: ['2.5k', 2500],
+                     5: ['5k', 5000],
+                     6: ['7.5k', 7500],
+                     7: ['10k', 10000],
+                     8: ['12.5k', 12500],
+                     9: ['15k', 15000],
+                     10: ['17.5k', 17500],
+                     11: ['20k', 20000],
+                     12: ['22.5k', 22500],
+                     13: ['25k', 25000],
+                     14: ['27.5k', 27500],
                      15: ['30k', 30000]
   };
   function updateVals(classes, value){
@@ -403,111 +409,8 @@ Code is available on our [Github repository][github_link].
   }
 </script>
 
-<!-- <table class="tg">
-  <thead>
-    <tr>
-      <th class="tg-0pky">Updates</th>
-      <th class="tg-0pky">Neural HMM (NH2)</th>
-      <th class="tg-0pky">Tacotron (T2-P)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td nowrap class="tg-0pky"><b>2.5k </b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_2_5k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_2_5k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-    <tr>
-      <td nowrap class="tg-0pky"><b>5k</b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_5k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_5k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-    <tr>
-      <td nowrap class="tg-0pky"><b>10k</b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_10k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_10k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-    <tr>
-      <td nowrap class="tg-0pky"><b>15k</b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_15k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_15k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-    <tr>
-      <td nowrap class="tg-0pky"><b>20k</b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_20k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_20k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-    <tr>
-      <td nowrap class="tg-0pky"><b>25k</b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_25k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_25k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-    <tr>
-      <td nowrap class="tg-0pky"><b>30k</b></td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/NeuralHMM/2State/NeuralHMM1AR2State_update_30k.wav" type="audio/wav">
-        </audio>
-      </td>
-      <td class="tg-0pky">
-        <audio controls>
-          <source src="./audio/Tacotron/TacotronWOPostnet/Tacotron_update_30k.wav" type="audio/wav">
-        </audio>
-      </td>
-    </tr>
-  </tbody>
-</table> -->
 
-
-### Speaking sentences Tacotron 2 cannot
+### Speaking sentences Tacotron 2 cannot speak
 
 <table class="tg">
 <thead>
@@ -1035,7 +938,7 @@ Drag the slider to change the speaking rate.
   var audio5_dq = document.getElementById('audio5_dq');
   var src_sentence6 = document.getElementById("src_sentence6");
   var audio6_dq = document.getElementById('audio6_dq');
-  output.innerHTML = (slider.value / 10);
+  output.innerHTML = ((10 - slider.value) / 10);
   slider.oninput = function() {
     output.innerHTML = ((10 - this.value) / 10);
     let number = this.value;
@@ -1054,14 +957,272 @@ Drag the slider to change the speaking rate.
   }
 </script>
 
+
+### Effect of using HiFi-GAN and a post-net
+
+These audio samples use a stronger vocoder ([HiFi-GAN version LJ_FT_T2_V1][HiFi_GAN_LJ_FT_V1_link]) and also include a hybrid condition NH2+P that demonstrates the effect of applying the post-net from model T2 to the output of model NH2.
+
+<table class="tg">
+  <thead>
+    <tr>
+      <th class="tg-0pky">Type</th>
+      <th class="tg-0pky" colspan="2">Proposed neural HMM TTS</th>
+      <th class="tg-0pky" colspan="2">Tacotron 2 baseline</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th class="tg-fymr">Condition</th>
+      <th class="tg-fymr">2 states per phone (NH2)</th>
+      <th class="tg-fymr">NH2 with Tacotron 2's post-net (NH2+P)</th>
+      <th class="tg-fymr">w/o post-net (T2-P)</th>
+      <th class="tg-fymr">w/ post-net (T2+P)</th>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 1</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_001.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_001.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_001.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_001.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 2</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_002.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_002.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_002.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_002.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 3</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_003.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_003.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_003.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_003.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 4</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_004.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_004.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_004.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_004.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 5</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_005.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_005.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_005.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_005.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 6</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_006.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_006.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_006.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_006.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 7</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_007.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_007.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_007.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_007.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 8</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_008.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_008.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_008.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_008.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 9</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_009.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_009.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_009.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_009.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap class="tg-0pky"><b>Sentence 10</b></td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_HiFiGAN_hvd_010.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/NeuralHMM/2State/HiFiGAN/NeuralHMM1AR2State_Postnet_HiFiGAN_hvd_010.wav" type="audio/wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWOPostnet/HiFiGAN/Tacotron_HiFiGAN_hvd_010.wav">
+        </audio>
+      </td>
+      <td class="tg-0pky">
+        <audio controls>
+          <source src="./audio/Tacotron/TacotronWPostnet/HiFiGAN/Tacotron_Postnet_HiFiGAN_hvd_010.wav" type="audio/wav">
+        </audio>
+      </td>
+    </tr>
+
+
+
+  </tbody>
+</table>
+
+
 ## Citation information
 
 ```
-@article{mehta2021neural,
+@inproceedings{mehta2022neural,
   title={Neural {HMM}s are all you need (for high-quality attention-free {TTS})},
   author={Mehta, Shivam and Sz{\'e}kely, {\'E}va and Beskow, Jonas and Henter, Gustav Eje},
-  journal={arXiv preprint arXiv:2108.13320},
-  year={2021}
+  booktitle={Proc. ICASSP},
+  year={2022}
 }
 ```
 
