@@ -1,14 +1,20 @@
-import streamlit as st
-
-import torch
+import os
 import sys
-import numpy as np
-import torch
-import matplotlib.pyplot as plt
-from nltk import word_tokenize
 import warnings
 
-import os
+import matplotlib.pyplot as plt
+import nltk
+import numpy as np
+import soundfile
+import streamlit as st
+import torch
+from nltk import word_tokenize
+from PIL import Image
+from waveglow.denoiser import Denoiser
+
+from src.hparams import create_hparams
+from src.training_module import TrainingModule
+from src.utilities.text import phonetise_text, text_to_sequence
 
 # print(os.getcwd())
 
@@ -16,28 +22,20 @@ import os
 # if os.getcwd().split('/')[-1] == 'deployment':
 #     os.chdir('../')
 
-import nltk
-nltk.download('punkt')
+nltk.download("punkt")
 
-sys.path.append('src/model')
-sys.path.append('waveglow/')
+sys.path.append("src/model")
+sys.path.append("waveglow/")
 
-from src.hparams import create_hparams
-from src.training_module import TrainingModule
-from src.utilities.text import text_to_sequence, phonetise_text
-from waveglow.denoiser import Denoiser
-import pydub
-import soundfile
-from scipy.io.wavfile import write
-from PIL import Image
-
-#===========================================#
+# ===========================================#
 #                Configs                    #
-#===========================================#
+# ===========================================#
 
-title = 'Neural HMM'
-image = Image.open('NeuralHMMTTS.png')
-desc = "Generate audio with the Neural HMM, more information available at https://shivammehta007.github.io/Neural-HMM/"
+title = "Neural HMM"
+image = Image.open("NeuralHMMTTS.png")
+desc = "Generate audio with the Neural HMM, \
+    more information available at  \
+    https://shivammehta007.github.io/Neural-HMM/"
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -45,16 +43,14 @@ checkpoint_path = "neur-hmm.ckpt"
 waveglow_path = "waveglow_256channels_universal_v5.pt"
 
 
-#===========================================#
+# ===========================================#
 #        Loads Model and Pipeline           #
-#===========================================#
-
-
-### Load Waveglow Vocoder
+# ===========================================#
+# Load Waveglow Vocoder
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    waveglow = torch.load(waveglow_path)['model']
+    waveglow = torch.load(waveglow_path)["model"]
     waveglow.to(device).eval()
     for k in waveglow.convinv:
         k.float()
@@ -63,42 +59,46 @@ with warnings.catch_warnings():
 
 hparams = create_hparams()
 
-### Load Neural-HMM
+
+# Load Neural-HMM
 def load_model(checkpoint_path):
     model = TrainingModule.load_from_checkpoint(checkpoint_path)
     _ = model.to(device).eval()
     return model
 
+
 model = load_model(checkpoint_path)
 
-### Phonetising
+
+# Phonetising
 def prepare_text(text):
     text = phonetise_text(hparams.cmu_phonetiser, text, word_tokenize)
-    sequence = np.array(text_to_sequence(text, ['english_cleaners']))[None, :]
+    sequence = np.array(text_to_sequence(text, ["english_cleaners"]))[None, :]
     sequence = torch.from_numpy(sequence).to(device).long()
     return sequence
 
 
-### Plotting mel
+# Plotting mel
 def plot_spectrogram_to_numpy(spectrogram):
 
     fig.canvas.draw()
     plt.close()
     return fig
 
-#===========================================#
+
+# ===========================================#
 #              Streamlit Code               #
-#===========================================#
+# ===========================================#
 
 
 st.title(title)
 st.write(desc)
-st.image(image, caption='Neural HMM Architecture')
+st.image(image, caption="Neural HMM Architecture")
 
-speaking_rate = st.slider('Speaker rate', min_value=0.1, max_value=0.9, value=0.4, step=0.1)
+speaking_rate = st.slider("Speaker rate", min_value=0.1, max_value=0.9, value=0.4, step=0.1)
 
-user_input = st.text_input('Text to generate')
-if st.button('Generate Audio'):
+user_input = st.text_input("Text to generate")
+if st.button("Generate Audio"):
     with torch.no_grad():
         model.model.hmm.hparams.duration_quantile_threshold = speaking_rate
         text = prepare_text(user_input)
@@ -113,14 +113,13 @@ if st.button('Generate Audio'):
 
     spectrogram = mel_output.cpu().numpy()[0]
     fig, ax = plt.subplots(figsize=(12, 3))
-    im = ax.imshow(spectrogram, aspect="auto", origin="lower",
-                   interpolation='none')
+    im = ax.imshow(spectrogram, aspect="auto", origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
     plt.xlabel("Frames")
     plt.ylabel("Channels")
     plt.title("Synthesised Mel-Spectrogram")
     st.pyplot(fig)
 
-    soundfile.write('temp.wav', audio_denoised.T, sample_rate)
-    st.audio('temp.wav', format='audio/wav')
-    os.remove('temp.wav')
+    soundfile.write("temp.wav", audio_denoised.T, sample_rate)
+    st.audio("temp.wav", format="audio/wav")
+    os.remove("temp.wav")

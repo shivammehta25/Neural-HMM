@@ -1,9 +1,9 @@
 ;;; # CMUdict  --  Major Version: 0.07
-;;; 
+;;;
 ;;; # $HeadURL: https://svn.code.sf.net/p/cmusphinx/code/branches/cmudict/cmudict-0.7b $
 ;;; # $Date:: 2015-07-15 12:34:30 -0400 (Wed, 15 Jul 2015)      $:
 ;;; # $Id:: cmudict-0.7b 13083 2015-07-15 16:34:30Z air         $:
-;;; # $Rev:: 13083                                              $: 
+;;; # $Rev:: 13083                                              $:
 ;;; # $Author:: air                                             $:
 ;;;
 ;;; #
@@ -46,14 +46,14 @@
 ;;; #
 ;;;
 ;;;  NOTES  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
-;;;  [20080401] (air)  New dict file format introduced 
+;;;
+;;;  [20080401] (air)  New dict file format introduced
 ;;;   - comments (like this section) are allowed
 ;;;   - file name is major version; vers/rev information is now in the header
 ;;;
-;;; 
+;;;
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 !EXCLAMATION-POINT  EH2 K S K L AH0 M EY1 SH AH0 N P OY2 N T
 "CLOSE-QUOTE  K L OW1 Z K W OW1 T
 "DOUBLE-QUOTE  D AH1 B AH0 L K W OW1 T
