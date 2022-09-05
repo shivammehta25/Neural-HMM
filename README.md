@@ -13,14 +13,15 @@
 [github_new_issue_link]: https://github.com/shivammehta007/Neural-HMM/issues/new
 [docker_install_link]: https://docs.docker.com/get-docker/
 [tacotron2_link]: https://github.com/NVIDIA/tacotron2
-[pretrained_model_link]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM.ckpt
+[pretrained_model_link_female]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
+[pretrained_model_link_male]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
 [hifigan_all]: https://drive.google.com/drive/folders/1-eEYTB5Av9jNql0WGBlRoi-WH2J7bp5Y
 [hifigan_t2]: https://drive.google.com/drive/folders/1dqpUYEYF_hH7T0rII9_VQbps45FvNBqf
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
 [pytorch_dataloader_issue_link]: https://github.com/pytorch/pytorch/issues/57273
 
 
-This is the official code repository for the paper "[Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link]". For audio examples, visit our [demo page][demo_page]. A [pre-trained model][pretrained_model_link] is also available.
+This is the official code repository for the paper "[Neural HMMs are all you need (for high-quality attention-free TTS)][paper_link]". For audio examples, visit our [demo page][demo_page]. [pre-trained model (female)][pretrained_model_link_female] and [pre-trained model (male)][pretrained_model_link_male] are also available.
 
 ![Synthesising from Neural-HMM](docs/images/model_video.gif)
 
@@ -45,8 +46,9 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 9. To resume training, run ```python train.py -c <CHECKPOINT_PATH>```
 
 ## Synthesis
-1. Download our [pre-trained LJ Speech model][pretrained_model_link].
+1. Download our [pre-trained LJ Speech model][pretrained_model_link_female].
 (This is the exact same model as system NH2 in the paper, but with training continued until reaching 200k updates total.)
+    - Alternatively, you can also use a [pre-trained RyanSpeech model][pretrained_model_link_male] (trained for 150k updates).
 2. Download HiFi gan pretrained [HiFiGAN model][hifigan_all].
     - We recommend using [fine tuned][hifigan_t2] on Tacotron2 if you cannot finetune on NeuralHMM.
 3. Run jupyter notebook and open ```synthesis.ipynb```.
