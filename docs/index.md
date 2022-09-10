@@ -2,7 +2,7 @@
 ##### [Shivam Mehta][shivam_profile], [Éva Székely][eva_profile], [Jonas Beskow][jonas_profile], and [Gustav Eje Henter][gustav_profile]
 
 
-<head> 
+<head>
 <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
@@ -39,7 +39,8 @@ For more information, please [read our ICASSP 2022 paper here][arxiv_link].
 
 ## Architecture
 
-![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of neural HMM TTS")
+<!-- ![Neural HMM TTS](./images/NeuralHMMTTS.png "Architecture of neural HMM TTS") -->
+![Synthesising from Neural-HMM](images/model_video.gif "Architecture of neural HMM TTS")
 
 <!-- ## Web Example
 <iframe url="http://130.237.67.68:8501/" height="400" width="100%" title="Web Example"> </iframe> -->
@@ -105,7 +106,7 @@ Code is available in our [Github repository][github_link], along with a pre-trai
   -webkit-appearance: none;
   width: 75%;
   height: 15px;
-  border-radius: 5px;  
+  border-radius: 5px;
   background: #d3d3d3;
   outline: none;
   opacity: 0.7;
@@ -118,7 +119,7 @@ Code is available in our [Github repository][github_link], along with a pre-trai
   appearance: none;
   width: 25px;
   height: 25px;
-  border-radius: 50%; 
+  border-radius: 50%;
   background: #409cff;
   cursor: pointer;
 }
@@ -370,20 +371,20 @@ Code is available in our [Github repository][github_link], along with a pre-trai
   // Functions to update values
   var iterations = {
                      0: ['0.5k', 500],
-                     1: ['1k', 1000],  
-                     2: ['1.5k', 1500], 
-                     3: ['2k', 2000],  
-                     4: ['2.5k', 2500], 
-                     5: ['5k', 5000], 
-                     6: ['7.5k', 7500], 
-                     7: ['10k', 10000], 
-                     8: ['12.5k', 12500], 
-                     9: ['15k', 15000], 
-                     10: ['17.5k', 17500], 
-                     11: ['20k', 20000], 
-                     12: ['22.5k', 22500], 
-                     13: ['25k', 25000], 
-                     14: ['27.5k', 27500], 
+                     1: ['1k', 1000],
+                     2: ['1.5k', 1500],
+                     3: ['2k', 2000],
+                     4: ['2.5k', 2500],
+                     5: ['5k', 5000],
+                     6: ['7.5k', 7500],
+                     7: ['10k', 10000],
+                     8: ['12.5k', 12500],
+                     9: ['15k', 15000],
+                     10: ['17.5k', 17500],
+                     11: ['20k', 20000],
+                     12: ['22.5k', 22500],
+                     13: ['25k', 25000],
+                     14: ['27.5k', 27500],
                      15: ['30k', 30000]
   };
   function updateVals(classes, value){
@@ -1207,8 +1208,8 @@ These audio samples use a stronger vocoder ([HiFi-GAN version LJ_FT_T2_V1][HiFi_
         </audio>
       </td>
     </tr>
-    
-    
+
+
 
   </tbody>
 </table>

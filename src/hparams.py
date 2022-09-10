@@ -4,11 +4,13 @@ hparams.py
 Hyper Parameters for the experiment
 """
 import os
+from argparse import Namespace
+
 import torch
+
+from src.utilities.data import Normalise
 from src.utilities.text import symbols
 from src.utilities.text.cmudict import CMUDict
-from src.utilities.data import Normalise
-from argparse import Namespace
 
 
 def create_hparams(generate_parameters=False):
@@ -25,14 +27,15 @@ def create_hparams(generate_parameters=False):
 
     if not generate_parameters:
         if not os.path.exists(data_parameters_filename):
-            raise FileNotFoundError("Data Normalizing file not found! " +
-                                    "Run \"python generate_data_properties.py\" first")
+            raise FileNotFoundError(
+                "Data Normalizing file not found! " + 'Run "python generate_data_properties.py" first'
+            )
 
         data_properties = torch.load(data_parameters_filename)
-        mean = data_properties['data_mean'].item()
-        std = data_properties['data_std'].item()
-        init_transition_prob = data_properties['init_transition_prob']
-        go_token_init_value = data_properties['go_token_init_value']
+        mean = data_properties["data_mean"].item()
+        std = data_properties["data_std"].item()
+        init_transition_prob = data_properties["init_transition_prob"]
+        go_token_init_value = data_properties["go_token_init_value"]
         normaliser = Normalise(mean, std)
     else:
         # Must be while generating data properties
@@ -60,21 +63,18 @@ def create_hparams(generate_parameters=False):
         logger=None,
         run_tests=False,
         warm_start=False,
-        ignore_layers=['model.embedding.weight'],
-
-
+        ignore_layers=["model.embedding.weight"],
         ################################
         # Data Parameters             #
         ################################
-        batch_size=7,
+        batch_size=2,
         load_mel_from_disk=False,
-        training_files='data/filelists/ljs_audio_text_train_filelist.txt',
-        validation_files='data/filelists/ljs_audio_text_val_filelist.txt',
-        text_cleaners=['english_cleaners'],
+        training_files="data/filelists/ljs_audio_text_train_filelist.txt",
+        validation_files="data/filelists/ljs_audio_text_val_filelist.txt",
+        text_cleaners=["english_cleaners"],
         phonetise=True,
-        cmu_phonetiser=CMUDict('src/phonetised_files/cmudict-0.7b.txt'),
+        cmu_phonetiser=CMUDict("src/phonetised_files/cmudict-0.7b.txt"),
         num_workers=20,
-
         ################################
         # Audio Parameters             #
         ################################
@@ -86,7 +86,6 @@ def create_hparams(generate_parameters=False):
         n_mel_channels=80,
         mel_fmin=0.0,
         mel_fmax=8000.0,
-
         ################################
         # Data Properties              #
         ################################
@@ -97,13 +96,11 @@ def create_hparams(generate_parameters=False):
         init_std=1.0,
         data_mean=0,
         data_std=0,
-
         ################################
         # Model Parameters             #
         ################################
         n_symbols=len(symbols),
         symbols_embedding_dim=512,
-
         ################################
         # Encoder parameters           #
         ################################
@@ -111,7 +108,6 @@ def create_hparams(generate_parameters=False):
         encoder_n_convolutions=3,
         encoder_embedding_dim=512,
         state_per_phone=2,
-
         ################################
         # HMM Parameters               #
         ################################
@@ -121,12 +117,10 @@ def create_hparams(generate_parameters=False):
         data_dropout=0,
         data_dropout_while_eval=True,
         data_dropout_while_sampling=False,
-
         predict_means=True,
         max_sampling_time=1000,
         deterministic_transition=True,
         duration_quantile_threshold=0.5,
-
         ################################
         # Prenet parameters            #
         ################################
@@ -134,24 +128,21 @@ def create_hparams(generate_parameters=False):
         prenet_dim=256,
         prenet_dropout=0.5,
         prenet_dropout_while_eval=True,
-
         ################################
         # Decoder RNN parameters       #
         ################################
         post_prenet_rnn_dim=1024,
-
         ################################
         # Decoder Parameters           #
         ################################
         parameternetwork=[1024],
-
         ################################
         # Optimization Hyperparameters #
         ################################
         learning_rate=1e-3,
         weight_decay=1e-6,
         grad_clip_thresh=40000.0,
-        stochastic_weight_avg=False
+        stochastic_weight_avg=False,
     )
 
     return hparams
