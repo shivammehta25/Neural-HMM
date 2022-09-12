@@ -1,10 +1,11 @@
 import numpy as np
 import torch
+
 from src.utilities.monotonic_align.core import maximum_path_c
 
 
 def maximum_path(value, mask):
-    """ Cython optimised version.
+    """Cython optimised version.
     value: [b, t_x, t_y]
     mask: [b, t_x, t_y]
     """

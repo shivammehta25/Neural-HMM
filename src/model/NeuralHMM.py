@@ -60,9 +60,11 @@ class NeuralHMM(nn.Module):
         attn_mask = (torch.unsqueeze(text_mask, -1) * torch.unsqueeze(mel_mask, 2)).squeeze(1)
         attn = maximum_path(self.hmm.log_alpha_scaled.transpose(1, 2).contiguous(), attn_mask).detach()
 
-        filtered_states = torch.matmul(attn.squeeze(1).transpose(1, 2), encoder_outputs).transpose(1, 2)
+        filtered_states = torch.matmul(attn.squeeze(1).transpose(1, 2), encoder_outputs)
 
-        filtered_states == 0
+        viterbi_prob = self.hmm.viterbi_algorithm(filtered_states, text_lengths, mels, mel_lengths)
+
+        filtered_states, viterbi_prob == 0, 0
 
         return log_probs
 

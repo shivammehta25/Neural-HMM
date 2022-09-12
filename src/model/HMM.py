@@ -121,73 +121,6 @@ class HMM(nn.Module):
 
         return log_probs
 
-    def _forward_with_states(self, states_per_timestep, text_lengths, mel_inputs, mel_inputs_lengths):
-        r"""
-        HMM forward pass for training
-
-        Args:
-            text_embeddings (torch.FloatTensor): Encoder outputs (32, 147, 512)
-            text_lengths (torch.LongTensor): Encoder output lengths for attention masking. this is text length (32)
-            mel_inputs (torch.FloatTensor): HMM inputs for teacher forcing. i.e. mel-specs (32, 80, 868)
-            mel_inputs_lengths (torch.LongTensor): Length of mel inputs (32)
-
-        Returns:
-            log_prob (torch.FloatTensor): log probability of the sequence
-        """
-
-        # Get dimensions of inputs
-        batch_size = mel_inputs.shape[0]
-        T_max = torch.max(mel_inputs_lengths)
-        self.N = states_per_timestep.shape[1]
-        mel_inputs = mel_inputs.permute(0, 2, 1)
-
-        # Intialize forward algorithm
-        log_state_priors = self.initialize_log_state_priors(states_per_timestep)
-        log_c = self.initialize_forward_algorithm_variables(mel_inputs)
-
-        # Get dropout flag
-        prenet_dropout_flag = self.get_dropout_while_eval(self.hparams.prenet_dropout_while_eval)
-        data_dropout_flag = self.get_dropout_while_eval(self.hparams.data_dropout_while_eval)
-
-        # Initialize autoregression elements
-        ar_inputs = self.add_go_token(mel_inputs)
-        h_post_prenet, c_post_prenet = self.init_lstm_states(batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
-
-        for t in range(T_max):
-
-            # Process Autoregression
-            h_post_prenet, c_post_prenet = self.process_ar_timestep(
-                t, ar_inputs, h_post_prenet, c_post_prenet, data_dropout_flag, prenet_dropout_flag
-            )
-
-            # Get mean, std and transition vector from decoder for this timestep
-            mean, std, transition_vector = self.decoder(h_post_prenet, states_per_timestep)
-
-            # Forward algorithm for this timestep
-            if t == 0:
-                log_alpha_temp = log_state_priors + self.emission_model(mel_inputs[:, 0], mean, std, text_lengths)
-            else:
-                log_alpha_temp = self.emission_model(mel_inputs[:, t], mean, std, text_lengths) + self.transition_model(
-                    self.log_alpha_scaled[:, t - 1, :], transition_vector, text_lengths
-                )
-
-            log_c[:, t] = torch.logsumexp(log_alpha_temp, dim=1)
-            self.log_alpha_scaled[:, t, :] = log_alpha_temp - log_c[:, t].unsqueeze(1)
-
-            # Save for plotting
-            self.transition_vector[:, t] = transition_vector.detach()
-            self.means.append(mean.detach())
-
-        log_c = self.mask_lengths(mel_inputs, mel_inputs_lengths, log_c)
-
-        sum_final_log_c = self.get_absorption_state_scaling_factor(
-            mel_inputs_lengths, self.log_alpha_scaled, text_lengths
-        )
-
-        log_probs = torch.sum(log_c, dim=1) + sum_final_log_c
-
-        return log_probs
-
     def mask_lengths(self, mel_inputs, mel_inputs_lengths, log_c):
         """
         Mask the lengths of the forward variables so that the variable lenghts
@@ -513,3 +446,142 @@ class HMM(nn.Module):
         log_state_priors[0] = 0.0
 
         return log_state_priors
+
+    def viterbi_algorithm(self, text_embeddings, text_lengths, mel_inputs, mel_inputs_lengths):
+        r"""
+        Uses the viterbi approximation to get the most likely sequence of states that could have
+        generated the obseravations
+        Args:
+            text_embeddings ((torch.FloatTensor)): (batch, max_text_len, embedding_dim)
+            text_lengths (torch.LongTensor): (batch)
+            mel_inputs (torch.FloatTensor): (batch, T_max, n_mel_channels)
+            mel_inputs_lengths (torch.LongTensor): (batch)
+        """
+        # Get dimensions of inputs
+        batch_size = mel_inputs.shape[0]
+        T_max = torch.max(mel_inputs_lengths)
+        mel_inputs = mel_inputs.permute(0, 2, 1)
+
+        # Initializing viterbi algorithm
+        log_state_priors = self.initialize_log_state_priors(text_embeddings)
+        log_chi, transition_vectors = self.initialize_viterbi_algorithm_variables(mel_inputs)
+
+        # Get dropout flag
+        prenet_dropout_flag = self.get_dropout_while_eval(self.hparams.prenet_dropout_while_eval)
+        data_dropout_flag = self.get_dropout_while_eval(self.hparams.data_dropout_while_eval)
+
+        # Initialize autoregression elements
+        ar_inputs = self.add_go_token(mel_inputs)
+        h_post_prenet, c_post_prenet = self.init_lstm_states(batch_size, self.hparams.post_prenet_rnn_dim, mel_inputs)
+
+        for t in range(T_max):
+
+            # Process Autoregression
+            h_post_prenet, c_post_prenet = self.process_ar_timestep(
+                t, ar_inputs, h_post_prenet, c_post_prenet, data_dropout_flag, prenet_dropout_flag
+            )
+
+            mean, std, transition_vector = self.decoder(h_post_prenet, text_embeddings[:, t].unsqueeze(1))
+
+            # For initial loop
+            # TODO: I am here
+            if t == 0:
+                log_chi[:, 0] = log_state_priors + self.emission_model(mel_inputs[:, 0], mean, std, text_lengths)
+
+            # Viterbi calculation variables
+            max_val, max_arg = self.transition_model.maxmul(log_chi[:, t - 1], transition_vector, text_lengths)
+            log_chi[:, t] = self.emission_model(mel_inputs[:, t], mean, std, text_lengths) + max_val
+
+            # Save Variables
+            self.transition_vectors[:, t] = transition_vector
+
+        best_path_probability = self.update_absorption_value_viterbi(
+            log_chi, self.transition_vectors, mel_inputs_lengths, text_lengths
+        )
+
+        most_likely_state_sequence = None
+        # = self.backtracking_most_likely_state_sequence(
+        #     mel_inputs_lengths, text_lengths, zeta
+        # )
+
+        return best_path_probability, most_likely_state_sequence
+
+    def initialize_viterbi_algorithm_variables(self, mel_inputs):
+        """
+        Initializes viterbi algorithm variables
+
+        Args:
+            mel_inputs (torch.FloatTensor): batch_size, T_max, n_mel_channels
+
+        Returns:
+            log_chi (torch.FloatTensor): Viterbi probability vector (batch_size, T_max)
+            transition_vector (torch.FloatTensor): Transition vector (batch_size, T_max)
+        """
+        batch_size, T_max = mel_inputs.shape[0], mel_inputs.shape[1]
+        log_chi = mel_inputs.new_zeros(batch_size, T_max)
+        transition_vectors = mel_inputs.new_zeros(batch_size, T_max)
+        return log_chi, transition_vectors
+
+    def backtracking_most_likely_state_sequence(self, mel_inputs_lengths, text_lengths, zeta):
+        """
+        Generate most likely state sequence
+        Args:
+            mel_inputs_lengths (torch.LongTensor): (batch_size)
+            text_lengths (torch.LongTensor): (batch_size)
+            zeta (torch.FloatTensor): (batch_size, T_max, N)
+        Returns:
+            torch.LongTensor: (batch_size, T_max)
+        """
+        batch_size, T_max, N = zeta.shape
+
+        state_sequence = [text_lengths - 1]
+        current_state = text_lengths - 1
+
+        timestep = mel_inputs_lengths - 1
+        while (timestep > 0).any():
+            # Get last timestep for each bach with all states (batch, N)
+            last_timestep_states = torch.gather(zeta, 1, timestep.unsqueeze(-1).expand(-1, N).unsqueeze(1)).squeeze(1)
+            # For each item in batch get the current state index in the last timestep states
+            state_value = torch.gather(last_timestep_states, 1, current_state.unsqueeze(1)).squeeze(1)
+            state_sequence.append(state_value)
+            current_state = state_value
+            timestep = torch.where(timestep - 1 > 0, timestep - 1, 0)
+
+        reverse_mask = mel_inputs_lengths.new_zeros(T_max)
+        reverse_mask = torch.clamp(
+            -(
+                torch.arange(T_max, out=reverse_mask).unsqueeze(0).expand(batch_size, T_max)
+                - (mel_inputs_lengths - 1).unsqueeze(1)
+            ),
+            0,
+        )
+
+        most_likeli_state_sequence = torch.gather(torch.stack(state_sequence, dim=1), 1, reverse_mask)
+
+        return most_likeli_state_sequence
+
+    def update_absorption_value_viterbi(self, log_chi, transition_vectors, mel_inputs_lengths, text_lengths):
+        """
+        Update the final values in the log_chi with transition vectors at that time step
+        Args:
+            log_chi (torch.FloatTensor): (batch, T_max, N)
+            transition_vectors (torch.FloatTensor): (batch, T_max, N)
+            mel_inputs_lengths (torch.LongTensor): (batch)
+            text_lengths (torch.LongTensor): (batch)
+        """
+        N = log_chi.shape[2]
+
+        last_transition_vector_index = (mel_inputs_lengths - 1).unsqueeze(-1).expand(-1, N).unsqueeze(1)
+
+        # Get the last transition vector
+        last_transition_vector_timestep = torch.gather(transition_vectors, 1, last_transition_vector_index).squeeze(1)
+        last_transition_vector_step_timestep = torch.gather(
+            last_transition_vector_timestep, 1, (text_lengths - 1).unsqueeze(1)
+        ).squeeze(1)
+        last_transition_probability_step_timestep = log_clamped(torch.sigmoid(last_transition_vector_step_timestep))
+
+        # get the last log_chi
+        last_log_chi_timestep = torch.gather(log_chi, 1, last_transition_vector_index).squeeze(1)
+        last_log_chi_step_timestep = torch.gather(last_log_chi_timestep, 1, (text_lengths - 1).unsqueeze(1)).squeeze(1)
+
+        return last_log_chi_step_timestep + last_transition_probability_step_timestep

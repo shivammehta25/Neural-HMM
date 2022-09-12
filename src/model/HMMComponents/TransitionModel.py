@@ -67,3 +67,37 @@ class TransitionModel(nn.Module):
         out = out.masked_fill(not_state_lengths_mask, -float("inf"))
 
         return out
+
+    def maxmul(self, log_chi, transition_vector, state_lengths):
+        r"""
+        Multiplies and returns the maximum of values from the transition matrix
+        Args:
+            log_chi (torch.FloatTensor): viterbi probability variable of previous time step
+            transition_vector (torch.FloatTensor): transition vector for each state
+            state_lengths (torch.LongTensor): lengths of states in a batch
+        """
+        T_max = log_chi.shape[1]
+
+        transition_probability = torch.sigmoid(transition_vector)
+        staying_probability = torch.sigmoid(-transition_vector)
+
+        log_staying_probability = log_clamped(staying_probability)
+        log_transition_probability = log_clamped(transition_probability)
+
+        staying = log_chi + log_staying_probability
+        leaving = log_chi + log_transition_probability
+        leaving = leaving.roll(1, dims=1)
+        leaving[:, 0] = -float("inf")
+
+        # Mask for max ending
+        mask_tensor = log_chi.new_zeros(T_max)
+        not_state_lengths_mask = ~(
+            torch.arange(T_max, out=mask_tensor).expand(len(state_lengths), T_max) < (state_lengths).unsqueeze(1)
+        ).unsqueeze(2)
+
+        transition_matrix = torch.stack((staying, leaving), dim=2).masked_fill(not_state_lengths_mask, -float("inf"))
+
+        # TODO: we can mask here as well check
+        max_val, max_arg = torch.max(transition_matrix, dim=2)
+
+        return max_val, max_arg
