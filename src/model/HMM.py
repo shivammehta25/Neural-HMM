@@ -463,7 +463,6 @@ class HMM(nn.Module):
         mel_inputs = mel_inputs.permute(0, 2, 1)
 
         # Initializing viterbi algorithm
-        log_state_priors = self.initialize_log_state_priors(text_embeddings)
         log_chi, transition_vectors = self.initialize_viterbi_algorithm_variables(mel_inputs)
 
         # Get dropout flag
@@ -480,20 +479,20 @@ class HMM(nn.Module):
             h_post_prenet, c_post_prenet = self.process_ar_timestep(
                 t, ar_inputs, h_post_prenet, c_post_prenet, data_dropout_flag, prenet_dropout_flag
             )
-
             mean, std, transition_vector = self.decoder(h_post_prenet, text_embeddings[:, t].unsqueeze(1))
 
             # For initial loop
             # TODO: I am here
             if t == 0:
-                log_chi[:, 0] = log_state_priors + self.emission_model(mel_inputs[:, 0], mean, std, text_lengths)
+                log_chi[:, t : t + 1] = 0 + self.emission_model(mel_inputs[:, 0], mean, std, text_lengths)
 
-            # Viterbi calculation variables
-            max_val, max_arg = self.transition_model.maxmul(log_chi[:, t - 1], transition_vector, text_lengths)
-            log_chi[:, t] = self.emission_model(mel_inputs[:, t], mean, std, text_lengths) + max_val
+            else:
+                # Viterbi calculation variables
+                max_val, max_arg = self.transition_model.maxmul(log_chi[:, t - 1 : t], transition_vector, text_lengths)
+                log_chi[:, t] = self.emission_model(mel_inputs[:, t], mean, std, text_lengths) + max_val
 
             # Save Variables
-            self.transition_vectors[:, t] = transition_vector
+            transition_vectors[:, t] = transition_vector.detach().squeeze(1)
 
         best_path_probability = self.update_absorption_value_viterbi(
             log_chi, self.transition_vectors, mel_inputs_lengths, text_lengths

@@ -86,8 +86,11 @@ class TransitionModel(nn.Module):
 
         staying = log_chi + log_staying_probability
         leaving = log_chi + log_transition_probability
-        leaving = leaving.roll(1, dims=1)
-        leaving[:, 0] = -float("inf")
+        # leaving = leaving.roll(1, dims=1)
+        # leaving[:, 0] = -float("inf")
+
+        # TODO: need to bring the attn matrix and see if it is a transition then use transition
+        # otherwise use staying probability
 
         # Mask for max ending
         mask_tensor = log_chi.new_zeros(T_max)
