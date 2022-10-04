@@ -25,8 +25,23 @@ def test_inference(hparams, dummy_data_uncollated):
     assert len(mel_output[0]) == hparams.n_mel_channels
 
 
-# TODO: remove inference and merge with sampling later
 def test_sample(hparams, dummy_data_uncollated):
+    neural_hmm = NeuralHMM(hparams)
+    text = dummy_data_uncollated[0][0]
+    (
+        mel_output,
+        states_travelled,
+        input_parameters,
+        output_parameters,
+    ) = neural_hmm.sample(text, torch.tensor(len(text)))
+    assert len(mel_output[0]) == hparams.n_mel_channels
+    assert input_parameters[0][0].shape[-1] == hparams.n_mel_channels
+    assert output_parameters[0][0].shape[-1] == hparams.n_mel_channels
+    assert output_parameters[0][1].shape[-1] == hparams.n_mel_channels
+
+
+def test_sample_without_normalisation(hparams, dummy_data_uncollated):
+    hparams.normaliser = None
     neural_hmm = NeuralHMM(hparams)
     text = dummy_data_uncollated[0][0]
     (
