@@ -8,7 +8,7 @@ import os
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from src.hparams import create_hparams
 from src.training_module import TrainingModule
@@ -74,7 +74,7 @@ def generate_gv(val_loader, model):
 
         for i in tqdm(range(len(text_inputs)), leave=False):
             mel_output, *_ = model.sample(text_inputs[i][: text_lengths[i]], text_lengths[i])
-            mel_outputs.append(torch.stack(mel_output))
+            mel_outputs.append(torch.tensor(mel_output, device=mels.device, dtype=mels.dtype))
             mel_outputs_len.append(len(mel_output))
 
     mel_outputs = pad_sequence(mel_outputs, batch_first=True)
