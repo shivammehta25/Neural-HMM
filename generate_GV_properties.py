@@ -13,6 +13,7 @@ from tqdm import tqdm
 from src.hparams import create_hparams
 from src.training_module import TrainingModule
 from src.utilities.data import TextMelCollate, TextMelLoader
+from src.utilities.functions import get_mask_from_len
 
 
 def to_gpu(x):
@@ -49,32 +50,51 @@ def main(args):
     hparams.batch_size = 6
     val_loader = get_val_dataloader(hparams)
 
-    model = TrainingModule.load_from_checkpoint(args.checkpoint_path)
-    model = model.cuda() if torch.cuda.is_available() else model
-    # Turn of normalisation
-    model.model.hmm.normaliser = None
+    model = load_model(args.checkpoint_path)
+
+    mean_gv, std_gv = generate_gv(val_loader, model)
+    return mean_gv, std_gv
+
+
+def generate_gv(val_loader, model):
+    """Takes in validation dataloader and model and returns mean and std of global variance
+
+    Args:
+        val_loader (dataset.DataLoader): Validation dataloader
+        model (nn.Module): Model
+
+    Returns:
+        _type_: _description_
+    """
     mel_outputs = []
     mel_outputs_len = []
-    for i, batch in enumerate(tqdm(val_loader)):
+    for j, batch in enumerate(tqdm(val_loader)):
         x, _ = parse_batch(batch)
         text_inputs, text_lengths, mels, max_len, mel_lengths = x
 
-        for i in tqdm(range(len(text_inputs))):
+        for i in tqdm(range(len(text_inputs)), leave=False):
             mel_output, *_ = model.sample(text_inputs[i][: text_lengths[i]], text_lengths[i])
-            mel_outputs.append(torch.stack([torch.tensor(t) for t in mel_output]))
+            mel_outputs.append(torch.stack(mel_output))
             mel_outputs_len.append(len(mel_output))
 
-            break
-        break
-
     mel_outputs = pad_sequence(mel_outputs, batch_first=True)
+    mel_outputs_len = torch.tensor(mel_outputs_len, device=mel_outputs.device)
 
-    # T_max = mel_outputs.shape[1]
-    # mask = torch.arange(T_max).expand(len(mel_outputs_len), T_max) < (torch.tensor(mel_outputs_len)).unsqueeze(1)
+    mask = (
+        get_mask_from_len(mel_outputs_len, device=mel_outputs.device).unsqueeze(2).expand(-1, -1, mel_outputs.shape[2])
+    )
 
-    mean_gv = torch.mean(mel_outputs, dim=[0, 1])
-    std_gv = torch.std(mel_outputs, dim=[0, 1])
+    mean_gv = torch.mean(mel_outputs.masked_select(mask))
+    std_gv = torch.std(mel_outputs.masked_select(mask))
     return mean_gv, std_gv
+
+
+def load_model(checkpoint):
+    model = TrainingModule.load_from_checkpoint(checkpoint)
+    model = model.cuda() if torch.cuda.is_available() else model
+    # Turn of normalisation
+    model.model.hmm.normaliser = None
+    return model
 
 
 def get_val_dataloader(hparams):
@@ -122,5 +142,6 @@ if __name__ == "__main__":
         raise FileExistsError("File already exists. Use -f to force overwrite")
 
     mean_gv, std_gv = main(args)
-
-    torch.save({"mean_gv": mean_gv, "std_gv": std_gv}, "gv_parameters.pt")
+    output = {"mean_gv": mean_gv.item(), "std_gv": std_gv.item()}
+    print(output)
+    torch.save(output, "gv_parameters.pt")
