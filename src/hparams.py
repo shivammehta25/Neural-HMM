@@ -113,7 +113,7 @@ def create_hparams(generate_parameters=False):
         ################################
         n_frames_per_step=1,  # AR Order
         train_go=True,
-        variance_floor=0.001,
+        variance_floor=0.01,
         data_dropout=0,
         data_dropout_while_eval=True,
         data_dropout_while_sampling=False,

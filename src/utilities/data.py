@@ -183,10 +183,10 @@ class Normalise:
     def __init__(self, mean, std):
         super().__init__()
 
-        if not torch.is_tensor(mean):
-            mean = torch.tensor(mean)
-        if not torch.is_tensor(std):
-            std = torch.tensor(std)
+        if torch.is_tensor(mean):
+            mean = float(mean.item())
+        if torch.is_tensor(std):
+            std = float(torch.tensor(std))
 
         self.mean = mean
         self.std = std
