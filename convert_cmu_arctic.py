@@ -1,6 +1,5 @@
 import os
 import tarfile
-import bz2
 import argparse
 import sys
 import random
@@ -34,9 +33,6 @@ cmu_arctic_speakers = {
 }
 
 BASE_TPL = "http://festvox.org/cmu_arctic/packed/cmu_us_{}_arctic.tar.bz2"
-
-ARCTIC_VOICES = ["awb", "bdl", "clb", "jmk", "ksp", "rms", "slt"]
-
 
 # From https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/datasets/utils.py
 # Copyright (C) 2019 Robin Scheibler, MIT License.
@@ -82,8 +78,8 @@ def download_uncompress(url, path=".", compression=None, context=None):
 def _list_voices(given=""):
     if given != "":
         print(f"Voice {given} not available")
-    print(f"Available voices are:")
-    for spkr in cmu_arctic_speakers.keys():
+    print("Available voices are:")
+    for spkr in cmu_arctic_speakers:
         details = cmu_arctic_speakers[spkr]
         print(f"{spkr}\t{details['accent']} {details['sex']} voice")
 
@@ -106,7 +102,7 @@ def main(args):
         _list_voices()
         sys.exit(0)
 
-    if args.voice not in cmu_arctic_speakers.keys():
+    if args.voice not in cmu_arctic_speakers:
         _list_voices(args.voice)
         sys.exit(1)
 
@@ -144,6 +140,7 @@ def main(args):
     print(f"        training_files='data/filelists/cmu_us_{args.voice}_arctic_train_filelist.txt',")
     if args.valid:
         print(f"        validation_files='data/filelists/cmu_us_{args.voice}_arctic_val_filelist.txt',")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
