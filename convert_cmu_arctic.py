@@ -34,7 +34,6 @@ cmu_arctic_speakers = {
 }
 
 BASE_TPL = "http://festvox.org/cmu_arctic/packed/cmu_us_{}_arctic.tar.bz2"
-ARCTIC_TPL = "http://festvox.org/cmu_arctic/cmu_arctic/packed/cmu_us_{}_arctic-0.95-release.tar.bz2"
 
 ARCTIC_VOICES = ["awb", "bdl", "clb", "jmk", "ksp", "rms", "slt"]
 
@@ -112,8 +111,6 @@ def main(args):
         sys.exit(1)
 
     url = BASE_TPL.format(args.voice)
-    if args.arctic and args.voice in ARCTIC_VOICES:
-        url = ARCTIC_TPL.format(args.voice)
 
     print("Downloading and unpacking data")
     print("Using url", url)
@@ -158,8 +155,6 @@ if __name__ == "__main__":
                         default=False, required=False, help='Create a validation set')
     parser.add_argument('-l', '--list', action='store_true',
                         default=False, required=False, help='List speakers')
-    parser.add_argument('-a', '--arctic', action='store_true',
-                        default=False, required=False, help='Use Arctic voices')
     args = parser.parse_args()
 
     main(args)
