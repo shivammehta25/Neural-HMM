@@ -34,6 +34,7 @@ cmu_arctic_speakers = {
 
 BASE_TPL = "http://festvox.org/cmu_arctic/packed/cmu_us_{}_arctic.tar.bz2"
 
+
 # From https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/datasets/utils.py
 # Copyright (C) 2019 Robin Scheibler, MIT License.
 def download_uncompress(url, path=".", compression=None, context=None):
@@ -85,6 +86,8 @@ def _list_voices(given=""):
 
 
 def read_text(voice):
+    if voice not in cmu_arctic_speakers:
+        return []
     textdata = []
     with open(f"data/cmu_us_{voice}_arctic/etc/txt.done.data") as txtdone:
         for line in txtdone.readlines():
