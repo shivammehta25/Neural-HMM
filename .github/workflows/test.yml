@@ -37,11 +37,16 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Download checkpoint
+    - name: Download checkpoint LJSpeech
       uses: wei/wget@v1
       with:
-        https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
-        https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
+        args: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
+
+    - name: Download checkpoint RyanSpeech
+      uses: wei/wget@v1
+      with:
+        args: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
+
     - name: Test with pytest
       run: |
         pytest
