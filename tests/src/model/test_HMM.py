@@ -197,7 +197,7 @@ def test_get_absorption_state_scaling_factor(hparams, dummy_embedded_data, test_
 
     sum_final_log_c_computed = torch.logsumexp(torch.stack(outputs), dim=1)
 
-    assert (sum_final_log_c_computed == sum_final_log_c).all()
+    assert torch.allclose(sum_final_log_c_computed, sum_final_log_c)
 
 
 def test_sample(hparams, dummy_embedded_data, test_batch_size):
