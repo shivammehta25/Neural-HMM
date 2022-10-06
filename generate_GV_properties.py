@@ -6,14 +6,12 @@ import argparse
 import os
 
 import torch
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from src.hparams import create_hparams
 from src.training_module import TrainingModule
 from src.utilities.data import TextMelCollate, TextMelLoader
-from src.utilities.functions import get_mask_from_len
 
 
 def to_gpu(x):
@@ -66,26 +64,34 @@ def generate_gv(val_loader, model):
     Returns:
         _type_: _description_
     """
+    mel_means = 0
+    mel_means_sq = 0
+    count = 0
+
+    print("Synthesise and compute mean!")
     mel_outputs = []
-    mel_outputs_len = []
-    for j, batch in enumerate(tqdm(val_loader)):
+    for j, batch in enumerate(tqdm(val_loader, leave=False)):
         x, _ = parse_batch(batch)
         text_inputs, text_lengths, mels, max_len, mel_lengths = x
 
         for i in tqdm(range(len(text_inputs)), leave=False):
             mel_output, *_ = model.sample(text_inputs[i][: text_lengths[i]], text_lengths[i])
-            mel_outputs.append(torch.tensor(mel_output, device=mels.device, dtype=mels.dtype))
-            mel_outputs_len.append(len(mel_output))
+            mel_output = torch.tensor(mel_output, device=mels.device, dtype=mels.dtype)
+            mel_outputs.append(mel_output)
+            mel_means += mel_output.sum(dim=0)
+            count += mel_output.shape[0]
 
-    mel_outputs = pad_sequence(mel_outputs, batch_first=True)
-    mel_outputs_len = torch.tensor(mel_outputs_len, device=mel_outputs.device)
+    mean_gv = mel_means / count
 
-    mask = (
-        get_mask_from_len(mel_outputs_len, device=mel_outputs.device).unsqueeze(2).expand(-1, -1, mel_outputs.shape[2])
-    )
+    sq_count = 0
+    print("Now get standard deviation!")
+    for mel_output in tqdm(mel_outputs, leave=False):
+        mel_means_sq += (mel_output.sub(mean_gv)).pow(2).sum(dim=0)
+        sq_count += mel_output.shape[0]
 
-    mean_gv = torch.mean(mel_outputs.masked_select(mask))
-    std_gv = torch.std(mel_outputs.masked_select(mask))
+    assert count == sq_count, "heh?"
+
+    std_gv = torch.sqrt(mel_means_sq.div(sq_count))
     return mean_gv, std_gv
 
 
@@ -138,10 +144,10 @@ if __name__ == "__main__":
     if args.checkpoint_path and not os.path.exists(args.checkpoint_path):
         raise FileExistsError("Check point not present recheck the name")
 
-    if os.path.exists(args.output_file) and not args.force:
-        raise FileExistsError("File already exists. Use -f to force overwrite")
+    # if os.path.exists(args.output_file) and not args.force:
+    #     raise FileExistsError("File already exists. Use -f to force overwrite")
 
     mean_gv, std_gv = main(args)
-    output = {"mean_gv": mean_gv.item(), "std_gv": std_gv.item()}
+    output = {"mean_gv": mean_gv, "std_gv": std_gv}
     print(output)
     torch.save(output, "gv_parameters.pt")
