@@ -427,8 +427,12 @@ class HMM(nn.Module):
 
             t += 1
 
+        x = torch.stack(x)
+
         if self.normaliser:
-            x = self.normaliser.inverse_normalise(torch.stack(x)).tolist()
+            x = self.normaliser.inverse_normalise(x).tolist()
+        else:
+            x = x.tolist()
 
         return x, z, input_parameter_values, output_parameter_values
 

@@ -15,9 +15,9 @@ from src.utilities.text.cmudict import CMUDict
 
 def create_hparams(generate_parameters=False):
     """
-    Model hyperparemters
+    Model hyperparameters
     Args:
-        generate_paramters: default False
+        generate_parameters: default False
             Only used when you run data_properties.py
 
     Returns:
