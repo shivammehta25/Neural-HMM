@@ -150,4 +150,5 @@ if __name__ == "__main__":
     mean_gv, std_gv = main(args)
     output = {"mean_gv": mean_gv, "std_gv": std_gv}
     print(output)
-    torch.save(output, "gv_parameters.pt")
+    torch.save(output, args.output_file)
+    print(f"Saved successfully as {args.output_file}")
