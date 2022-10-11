@@ -107,9 +107,7 @@ class TrainingModule(pl.LightningModule):
             optimizer ([type]): [description]
         """
 
-        if self.trainer.is_global_zero and (
-            self.global_step % self.hparams.save_model_checkpoint == 0
-        ):
+        if self.trainer.is_global_zero and (self.global_step % self.hparams.save_model_checkpoint == 0):
             (
                 text_inputs,
                 text_lengths,
@@ -123,9 +121,7 @@ class TrainingModule(pl.LightningModule):
                 input_parameters,
                 output_parameters,
             ) = self.model.sample(text_inputs[0], text_lengths[0])
-            mel_output_normalised = self.model.hmm.normaliser(
-                mels.new_tensor(mel_output)
-            )
+            mel_output_normalised = self.model.hmm.normaliser(mels.new_tensor(mel_output))
 
             with torch.no_grad():
                 _ = self.model((text_inputs, text_lengths, mels, max_len, mel_lengths))
@@ -190,6 +186,4 @@ class TrainingModule(pl.LightningModule):
             grad_norm_dict: Dictionary containing current grad norm metrics
 
         """
-        self.log_dict(
-            grad_norm_dict, on_step=True, on_epoch=True, prog_bar=False, logger=True
-        )
+        self.log_dict(grad_norm_dict, on_step=True, on_epoch=True, prog_bar=False, logger=True)
