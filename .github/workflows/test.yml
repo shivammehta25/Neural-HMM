@@ -40,12 +40,12 @@ jobs:
     - name: Download checkpoint LJSpeech
       uses: wei/wget@v1
       with:
-        args: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
+        args: https://github.com/shivammehta25/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
 
     - name: Download checkpoint RyanSpeech
       uses: wei/wget@v1
       with:
-        args: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
+        args: https://github.com/shivammehta25/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
 
     - name: Test with pytest
       run: |
