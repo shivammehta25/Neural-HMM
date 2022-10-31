@@ -183,11 +183,6 @@ class Normalise:
     def __init__(self, mean, std):
         super().__init__()
 
-        if torch.is_tensor(mean):
-            mean = float(mean.item())
-        if torch.is_tensor(std):
-            std = float(torch.tensor(std))
-
         self.mean = mean
         self.std = std
 
@@ -204,10 +199,18 @@ class Normalise:
         Returns:
             (torch.FloatTensor): Normalised value
         """
-        if not torch.is_tensor(x):
-            x = torch.tensor(x)
+        x = self.ensure_device_and_type(x)
 
         x = x.sub(self.mean).div(self.std)
+        return x
+
+    def ensure_device_and_type(self, x):
+        if not torch.is_tensor(x):
+            x = torch.tensor(x)
+        if torch.is_tensor(self.mean):
+            self.mean = self.mean.to(x.device)
+        if torch.is_tensor(self.std):
+            self.std = self.std.to(x.device)
         return x
 
     def inverse_normalise(self, x):
