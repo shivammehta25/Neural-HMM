@@ -355,7 +355,7 @@ class HMM(nn.Module):
         if not T:
             T = self.hparams.max_sampling_time
 
-        self.N = encoder_outputs.shape[1]
+        self.N = encoder_outputs.shape[1] - 1
         if self.hparams.n_frames_per_step > 0:
             ar_mel_inputs = self.go_tokens.unsqueeze(0)
         else:
