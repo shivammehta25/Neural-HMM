@@ -14,7 +14,7 @@
 <!-- This page presents audio examples of neural TTS using neural hidden Markov models instead of attention, as published at ICASSP 2022. -->
 
 [arxiv_link]: https://arxiv.org/abs/2108.13320
-[github_link]: https://github.com/shivammehta007/Neural-HMM
+[github_link]: https://github.com/shivammehta25/Neural-HMM
 [shivam_profile]: https://www.kth.se/profile/smehta
 [eva_profile]: https://www.kth.se/profile/szekely
 [jonas_profile]: https://www.kth.se/profile/beskow
@@ -1231,4 +1231,4 @@ These audio samples use a stronger vocoder ([HiFi-GAN version LJ_FT_T2_V1][HiFi_
 </audio>
 
 
-[![Visits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fshivammehta007.github.io%2FNeural-HMM%2F&count_bg=%23409CFF&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://shivammehta007.github.io/Neural-HMM/)
+[![Visits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fshivammehta007.github.io%2FNeural-HMM%2F&count_bg=%23409CFF&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://shivammehta25.github.io/Neural-HMM/)

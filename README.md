@@ -7,14 +7,14 @@
 [eva_profile]: https://www.kth.se/profile/szekely
 [jonas_profile]: https://www.kth.se/profile/beskow
 [gustav_profile]: https://people.kth.se/~ghe/
-[demo_page]: https://shivammehta007.github.io/Neural-HMM/
+[demo_page]: https://shivammehta25.github.io/Neural-HMM/
 [ljspeech_link]: https://keithito.com/LJ-Speech-Dataset/
-[github_link]: https://github.com/shivammehta007/Neural-HMM.git
-[github_new_issue_link]: https://github.com/shivammehta007/Neural-HMM/issues/new
+[github_link]: https://github.com/shivammehta25/Neural-HMM.git
+[github_new_issue_link]: https://github.com/shivammehta25/Neural-HMM/issues/new
 [docker_install_link]: https://docs.docker.com/get-docker/
 [tacotron2_link]: https://github.com/NVIDIA/tacotron2
-[pretrained_model_link_female]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
-[pretrained_model_link_male]: https://github.com/shivammehta007/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
+[pretrained_model_link_female]: https://github.com/shivammehta25/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Female.ckpt
+[pretrained_model_link_male]: https://github.com/shivammehta25/Neural-HMM/releases/download/Neural-HMM/Neural-HMM-Male.ckpt
 [hifigan_all]: https://drive.google.com/drive/folders/1-eEYTB5Av9jNql0WGBlRoi-WH2J7bp5Y
 [hifigan_t2]: https://drive.google.com/drive/folders/1dqpUYEYF_hH7T0rII9_VQbps45FvNBqf
 [pytorch_lightning_link]: https://github.com/PyTorchLightning/pytorch-lightning
@@ -27,9 +27,9 @@ This is the official code repository for the paper "[Neural HMMs are all you nee
 
 ## Setup and training using LJ Speech
 1. Download and extract the [LJ Speech dataset][ljspeech_link]. Place it in the `data` folder such that the directory becomes `data/LJSpeech-1.1`. Otherwise update the filelists in `data/filelists` accordingly.
-2. Clone this repository ```git clone https://github.com/shivammehta007/Neural-HMM.git```
+2. Clone this repository ```git clone https://github.com/shivammehta25/Neural-HMM.git```
    * If using single GPU checkout the branch ```gradient_checkpointing``` it will help to fit bigger batch size during training.
-   * Use `git clone --single-branch -b gradient_checkpointing https://github.com/shivammehta007/Neural-HMM.git` for that.
+   * Use `git clone --single-branch -b gradient_checkpointing https://github.com/shivammehta25/Neural-HMM.git` for that.
 3. Initalise the submodules ```git submodule init; git submodule update```
 4. Make sure you have [docker installed][docker_install_link] and running.
     * It is recommended to use Docker (it manages the CUDA runtime libraries and Python dependencies itself specified in Dockerfile)
