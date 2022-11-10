@@ -56,7 +56,7 @@ class NeuralHMM(nn.Module):
         return log_probs
 
     @torch.inference_mode()
-    def inference(self, text_inputs):
+    def inference(self, text_inputs, sampling_temp=1.0):
         r"""
         Sampling audio based on single text input
         Args:
@@ -83,7 +83,7 @@ class NeuralHMM(nn.Module):
         return mel_output, states_travelled
 
     @torch.inference_mode()
-    def sample(self, text_inputs, text_lengths):
+    def sample(self, text_inputs, text_lengths, sampling_temp=1.0):
         r"""
         Sampling mel spectrogram based on text inputs
         Args:
@@ -106,6 +106,6 @@ class NeuralHMM(nn.Module):
             states_travelled,
             input_parameters,
             output_parameters,
-        ) = self.hmm.sample(encoder_outputs)
+        ) = self.hmm.sample(encoder_outputs, sampling_temp)
 
         return mel_output, states_travelled, input_parameters, output_parameters
