@@ -171,10 +171,10 @@ class TrainingModule(pl.LightningModule):
 
         return text_inputs, text_lengths, mels, max_len, mel_lengths
 
-    def inference(self, text_inputs):
+    def inference(self, text_inputs, sampling_temp=1.0):
         return self.model.inference(text_inputs)
 
-    def sample(self, text_inputs, text_lengths):
+    def sample(self, text_inputs, text_lengths, sampling_temp=1.0):
         return self.model.sample(text_inputs, text_lengths)
 
     def log_grad_norm(self, grad_norm_dict):

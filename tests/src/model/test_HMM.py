@@ -199,8 +199,8 @@ def test_get_absorption_state_scaling_factor(hparams, dummy_embedded_data, test_
 
     assert torch.allclose(sum_final_log_c_computed, sum_final_log_c)
 
-
-def test_sample(hparams, dummy_embedded_data, test_batch_size):
+@pytest.mark.parametrize("sampling_temp", [0, 0.334, 1, None])
+def test_sample(hparams, dummy_embedded_data, test_batch_size, sampling_temp):
     model = HMM(hparams)
     (
         embedded_input,
@@ -210,7 +210,7 @@ def test_sample(hparams, dummy_embedded_data, test_batch_size):
         output_lengths,
     ) = dummy_embedded_data
 
-    (mel_output, states_travelled, input_parameters, output_parameters) = model.sample(embedded_input[0:1])
+    (mel_output, states_travelled, input_parameters, output_parameters) = model.sample(embedded_input[0:1], sampling_temp=sampling_temp)
     assert len(mel_output[0]) == hparams.n_mel_channels
     assert input_parameters[0][0].shape[-1] == hparams.n_mel_channels
     assert output_parameters[0][0].shape[-1] == hparams.n_mel_channels

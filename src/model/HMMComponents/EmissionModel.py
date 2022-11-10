@@ -13,11 +13,11 @@ class EmissionModel(nn.Module):
         super().__init__()
         self.distribution_function = tdist.normal.Normal
 
-    def sample(self, means, stds):
+    def sample(self, means, stds, sampling_temp=1.0):
         r"""
         Draws a Sample from each distribution
         """
-        return self.distribution_function(means, stds).sample()
+        return self.distribution_function(means, stds * sampling_temp).sample() if sampling_temp > 0 else means
 
     def forward(self, x_t, means, stds, state_lengths):
         r"""
