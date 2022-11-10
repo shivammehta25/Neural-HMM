@@ -78,7 +78,7 @@ class NeuralHMM(nn.Module):
             states_travelled,
             input_parameters,
             output_parameters,
-        ) = self.hmm.sample(encoder_outputs)
+        ) = self.hmm.sample(encoder_outputs, sampling_temp=sampling_temp)
 
         return mel_output, states_travelled
 
