@@ -25,7 +25,8 @@ def test_inference(hparams, dummy_data_uncollated):
     mel_output, states_travelled = neural_hmm.inference(text)
     assert len(mel_output[0]) == hparams.n_mel_channels
 
-@pytest.mark.parametrize("sampling_temp", [0, 0.334, 1, None])
+
+@pytest.mark.parametrize("sampling_temp", [0, 0.334, 1])
 def test_sample(hparams, dummy_data_uncollated, sampling_temp):
     neural_hmm = NeuralHMM(hparams)
     text = dummy_data_uncollated[0][0]
@@ -40,7 +41,8 @@ def test_sample(hparams, dummy_data_uncollated, sampling_temp):
     assert output_parameters[0][0].shape[-1] == hparams.n_mel_channels
     assert output_parameters[0][1].shape[-1] == hparams.n_mel_channels
 
-@pytest.mark.parametrize("sampling_temp", [0, 0.334, 1, None])
+
+@pytest.mark.parametrize("sampling_temp", [0, 0.334, 1])
 def test_sample_without_normalisation(hparams, dummy_data_uncollated, sampling_temp):
     hparams.normaliser = None
     neural_hmm = NeuralHMM(hparams)
