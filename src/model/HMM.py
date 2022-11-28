@@ -108,9 +108,8 @@ class HMM(nn.Module):
 
             log_c[:, t] = torch.logsumexp(log_alpha_temp, dim=1)
             self.log_alpha_scaled[:, t, :] = log_alpha_temp - log_c[:, t].unsqueeze(1)
-
+            self.transition_vector[:, t] = transition_vector
             # Save for plotting
-            self.transition_vector[:, t] = transition_vector.detach()
             self.means.append(mean.detach())
 
         log_c = self.mask_lengths(mel_inputs, mel_inputs_lengths, log_c)
@@ -219,10 +218,10 @@ class HMM(nn.Module):
         batch_size, T_max, _ = mel_inputs.shape
         self.log_alpha_scaled = mel_inputs.new_zeros((batch_size, T_max, self.N))
         log_c = mel_inputs.new_zeros(batch_size, T_max)
+        self.transition_vector = mel_inputs.new_zeros((batch_size, T_max, self.N))
 
         # Saving for plotting later, will not have gradient tapes
         self.means = []
-        self.transition_vector = mel_inputs.new_zeros((batch_size, T_max, self.N))
 
         return log_c
 
