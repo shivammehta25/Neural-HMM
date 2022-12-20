@@ -27,7 +27,7 @@ repos:
   #       args: [--in-place, --wrap-summaries=115, --wrap-descriptions=120]
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.11.1
+    rev: v5.11.3
     hooks:
       - id: isort
 
