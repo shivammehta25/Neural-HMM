@@ -80,7 +80,6 @@ def prepare_text(text):
 
 # Plotting mel
 def plot_spectrogram_to_numpy(spectrogram):
-
     fig.canvas.draw()
     plt.close()
     return fig
