@@ -25,7 +25,13 @@ def dummy_data_uncollated(test_batch_size):
 
 @pytest.fixture
 def dummy_data(dummy_data_uncollated, hparams):
-    (text_padded, input_lengths, mel_padded, gate_padded, output_lengths,) = TextMelCollate(
+    (
+        text_padded,
+        input_lengths,
+        mel_padded,
+        gate_padded,
+        output_lengths,
+    ) = TextMelCollate(
         hparams.n_frames_per_step
     )(dummy_data_uncollated)
     return text_padded, input_lengths, mel_padded, gate_padded, output_lengths
