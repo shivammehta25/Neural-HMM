@@ -4,6 +4,7 @@ training_model.py
 This file contains PyTorch Lightning's main module where code
 of the main model is implemented
 """
+
 import os
 from argparse import Namespace
 

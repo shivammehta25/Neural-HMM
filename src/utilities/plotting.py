@@ -3,6 +3,7 @@ plotting.py
 
 File contains utilities for plotting
 """
+
 from typing import Any
 
 import matplotlib
