@@ -1,4 +1,5 @@
 """Waveglow style denoiser can be used to remove the artifacts from the HiFiGAN generated audio."""
+
 import torch
 
 from src.utilities.stft import STFT

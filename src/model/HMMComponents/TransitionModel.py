@@ -3,6 +3,7 @@
 This network is responsible for the models response of whether to switch to next state or keep emitting at the current
 state.
 """
+
 import torch
 import torch.nn as nn
 

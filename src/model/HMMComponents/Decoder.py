@@ -1,5 +1,6 @@
 """Parameter Model This model takes state as an input and generates its parameters i.e mean, standard deviation and
 the probability of transition to the next state."""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
