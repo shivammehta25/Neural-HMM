@@ -3,6 +3,7 @@ data.py
 
 Utilities for processing of Data
 """
+
 import random
 
 import numpy as np
